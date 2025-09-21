@@ -6,6 +6,9 @@
 #include "GameFramework/Pawn.h"
 #include "PawnPlayerPM.generated.h"
 
+class UFloatingPawnMovement;
+class UStaticMeshComponent;
+
 UCLASS()
 class PURRFECT_MATCH_API APawnPlayerPM : public APawn
 {
@@ -25,5 +28,14 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	USceneComponent* SceneComponentRoot;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UStaticMeshComponent* StaticMesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UFloatingPawnMovement* FloatingPawnMovement;
 
 };
