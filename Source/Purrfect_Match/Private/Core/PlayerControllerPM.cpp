@@ -5,9 +5,11 @@
 #include "EnhancedInput/Public/EnhancedInputSubsystems.h"
 #include "EnhancedInput/Public/InputMappingContext.h"
 #include "EnhancedInput/Public/EnhancedInputComponent.h"
+#include "Logging/StructuredLog.h"
 
 void APlayerControllerPM::SetupInputComponent()
 {
+	UE_LOGFMT(LogTemp, Warning, "SetupInputComponent");
 	Super::SetupInputComponent();
 
 	if (IsValid(InputComponent))
@@ -23,12 +25,12 @@ void APlayerControllerPM::SetupInputComponent()
 		{
 			if (IsValid(IAMoveHorizontal))
 			{
-				EnhancedInputComponent->BindAction(IAMoveHorizontal, ETriggerEvent::Triggered, this, &ThisClass::MoveHorizontal);
+				EnhancedInputComponent->BindAction(IAMoveHorizontal, ETriggerEvent::Triggered, this, &APlayerControllerPM::MoveHorizontal);
 			}
 
 			if (IsValid(IAMoveVertical))
 			{
-				EnhancedInputComponent->BindAction(IAMoveVertical, ETriggerEvent::Triggered, this, &ThisClass::MoveVertical);
+				EnhancedInputComponent->BindAction(IAMoveVertical, ETriggerEvent::Triggered, this, &APlayerControllerPM::MoveVertical);
 			}
 		}
 	}
@@ -38,9 +40,10 @@ void APlayerControllerPM::MoveHorizontal(const FInputActionValue& InputActionVal
 {
 	const float AxisValue = InputActionValue.Get<float>();
 
+	UE_LOGFMT(LogTemp, Warning, "Move horizontal");
 	if (TObjectPtr<APawn> PawnPlayer = GetPawn())
 	{
-		PawnPlayer->AddMovementInput({1.0f, 0.0f, 0.0f});
+		PawnPlayer->AddMovementInput({1.0f, 0.0f, 0.0f}, AxisValue);
 	}
 }
 
@@ -48,8 +51,9 @@ void APlayerControllerPM::MoveVertical(const FInputActionValue& InputActionValue
 {
 	const float AxisValue = InputActionValue.Get<float>();
 
+	UE_LOGFMT(LogTemp, Warning, "Move vert");
 	if (TObjectPtr<APawn> PawnPlayer = GetPawn())
 	{
-		PawnPlayer->AddMovementInput({0.0f, 0.0f, 1.0f});
+		PawnPlayer->AddMovementInput({0.0f, 0.0f, 1.0f}, AxisValue);
 	}
 }
