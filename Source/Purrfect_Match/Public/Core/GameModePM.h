@@ -9,6 +9,9 @@
 /**
  * 
  */
+class APlayerStart;
+class APlayerSpawnLocation;
+
 UCLASS()
 class PURRFECT_MATCH_API AGameModePM : public AGameMode
 {
@@ -19,5 +22,13 @@ class PURRFECT_MATCH_API AGameModePM : public AGameMode
 	AGameModePM();
 	
 	virtual void BeginPlay() override;
+
+	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+
+	virtual void InitStartSpot_Implementation(AActor* StartSpot, AController* NewPlayer) override;
+
+	protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpawnPoint")
+	TSubclassOf<APlayerSpawnLocation> SpawnPointClass;
 	
 };
