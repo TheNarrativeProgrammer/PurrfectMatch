@@ -16,6 +16,8 @@ class PURRFECT_MATCH_API AGameModePM : public AGameMode
 
 
 	public:
+	AGameModePM();
+	
 	virtual void BeginPlay() override;
 	
 };
