@@ -27,6 +27,7 @@ struct FTileStatus
 
 
 class UTileInfo;
+class UDelegateBindingCompGameBoard;
 
 UCLASS()
 class PURRFECT_MATCH_API AGameBoard : public AActor
@@ -42,6 +43,10 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Delegate binding component")
+	TObjectPtr<UDelegateBindingCompGameBoard> DelegateBindingCompGameBoard;
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tile Info")
 	TObjectPtr<UTileInfoManagerComponent> TileInfoManagerComponent;
@@ -83,7 +88,10 @@ protected:
 	int32 GetIndexOfArray(int32 xValue, int32 yValue);
 
 	UFUNCTION(BlueprintCallable)
-	FVector GetPlaneLocation(int32 xValue, int32 yValue);
+	FVector GetTileLocationByXandY(int32 xValue, int32 yValue);
+
+	UFUNCTION(BlueprintCallable)
+	FVector GetTileLocationByArrayIndex(int32 index);
 
 	UFUNCTION(BlueprintCallable)
 	void SpawnPlaneAtLocation(FVector PlaneSpawnLocation);
@@ -110,5 +118,8 @@ public:
 
 	UFUNCTION()
 	UTileInfo* GetTileInfo(FGameplayTag GameplayTag);
+
+	UFUNCTION()
+	void GetTileLocation(int32 tileIndex);
 
 };

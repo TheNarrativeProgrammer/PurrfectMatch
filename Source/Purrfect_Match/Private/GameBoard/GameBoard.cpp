@@ -3,13 +3,15 @@
 
 #include "GameBoard/GameBoard.h"
 #include "Components/StaticMeshComponent.h"
-
-
+#include "Core/GameStatePM.h"
+#include "Components/Binding/DelegateBindingCompGameBoard.h"
 
 // Sets default values
 AGameBoard::AGameBoard()
 {
 	TileInfoManagerComponent = CreateDefaultSubobject<UTileInfoManagerComponent>(TEXT("Tile Info"));
+
+	DelegateBindingCompGameBoard = CreateDefaultSubobject<UDelegateBindingCompGameBoard>(TEXT("DelegateBindingCompGameBoard"));
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -26,11 +28,17 @@ void AGameBoard::BeginPlay()
 		for (int x = 0; x < width; x++)
 		{
 			int32 index = GetIndexOfArray(x, y);
-			FVector PlaneSpawnLocation = GetPlaneLocation(x, y);
+			FVector PlaneSpawnLocation = GetTileLocationByXandY(x, y);
 			SpawnPlaneAtLocation(PlaneSpawnLocation);
 		}
 	}
-	
+
+	if (AGameStatePM* GameStatePM = Cast<AGameStatePM>(GetWorld()->GetGameState()))
+	{
+		GameStatePM->GameBoardSendBoardDimensionsDelegate.Broadcast(width, height);
+		GameStatePM->GameBoardPopulatedDelegate.Broadcast();
+		
+	}
 }
 
 int32 AGameBoard::GetIndexOfArray(int32 xValue, int32 yValue)
@@ -38,12 +46,21 @@ int32 AGameBoard::GetIndexOfArray(int32 xValue, int32 yValue)
 	return yValue * width + xValue;
 }
 
-FVector AGameBoard::GetPlaneLocation(int32 xValue, int32 yValue)
+FVector AGameBoard::GetTileLocationByXandY(int32 xValue, int32 yValue)
 {
 	float x = (GridOrigin.X + xValue) * tileMoveAmount;
 	float z = (GridOrigin.Z + yValue) * tileMoveAmount;
 
 	return FVector(x, 0.0f, z);
+}
+
+FVector AGameBoard::GetTileLocationByArrayIndex(int32 index)
+{
+	if (BoardTiles.IsValidIndex(index))
+	{
+		return BoardTiles[index]->GetComponentLocation();
+	}
+	return BoardTiles[0]->GetComponentLocation();
 }
 
 void AGameBoard::SpawnPlaneAtLocation(FVector PlaneSpawnLocation)
@@ -149,6 +166,15 @@ UTileInfo* AGameBoard::GetTileInfo(FGameplayTag GameplayTag)
 
 	
 }
+
+void AGameBoard::GetTileLocation(int32 tileIndex)
+{
+	FVector tileLocation = GetTileLocationByArrayIndex(tileIndex);
+	DelegateBindingCompGameBoard->GameStatePM->GameBoardOnRequestSendTileLocationDelegate.Broadcast(tileLocation);
+}
+
+
+
 
 
 

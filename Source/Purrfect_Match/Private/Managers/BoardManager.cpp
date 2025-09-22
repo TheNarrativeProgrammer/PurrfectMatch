@@ -3,12 +3,15 @@
 
 #include "Managers/BoardManager.h"
 #include "GameBoard/GameBoard.h"
+#include "components/Binding/DelegateBindingCompBoardManager.h"
 
 // Sets default values
 ABoardManager::ABoardManager()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	DelegateBindingCompBoardManager = CreateDefaultSubobject<UDelegateBindingCompBoardManager>(TEXT("DelegateBindingCompBoardManager"));
 
 	TagAffectionFood = FGameplayTag::RequestGameplayTag(FName("Affection.Food"));
 	TagAffectionPlant = FGameplayTag::RequestGameplayTag(FName("Affection.Plants"));
@@ -25,11 +28,7 @@ void ABoardManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	for (int i = 0; i < numberOfRowsAtLevelStart; i++)
-	{
-		TArray<FGameplayTag> NewTileLine = GenerateTileLine();
-		GameBoard->PopulateRow(i, NewTileLine);
-	}
+	
 }
 
 TArray<FGameplayTag> ABoardManager::GenerateTileLine()
@@ -98,5 +97,14 @@ void ABoardManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void ABoardManager::PopulateBoardWithInitialTiles()
+{
+	for (int i = 0; i < numberOfRowsAtLevelStart; i++)
+	{
+		TArray<FGameplayTag> NewTileLine = GenerateTileLine();
+		GameBoard->PopulateRow(i, NewTileLine);
+	}
 }
 

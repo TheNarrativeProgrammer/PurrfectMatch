@@ -9,7 +9,7 @@
 
 void APlayerControllerPM::SetupInputComponent()
 {
-	UE_LOGFMT(LogTemp, Warning, "SetupInputComponent");
+	UE_LOGFMT(LogTemp, Warning, "SetupInputComponent Controller");
 	Super::SetupInputComponent();
 
 	if (IsValid(InputComponent))
@@ -40,10 +40,10 @@ void APlayerControllerPM::MoveHorizontal(const FInputActionValue& InputActionVal
 {
 	const float AxisValue = InputActionValue.Get<float>();
 
-	UE_LOGFMT(LogTemp, Warning, "Move horizontal");
+	UE_LOGFMT(LogTemp, Warning, "side controller");
 	if (TObjectPtr<APawn> PawnPlayer = GetPawn())
 	{
-		PawnPlayer->AddMovementInput({1.0f, 0.0f, 0.0f}, AxisValue);
+		//PawnPlayer->AddMovementInput({1.0f, 0.0f, 0.0f}, AxisValue);
 	}
 }
 
@@ -54,6 +54,6 @@ void APlayerControllerPM::MoveVertical(const FInputActionValue& InputActionValue
 	UE_LOGFMT(LogTemp, Warning, "Move vert");
 	if (TObjectPtr<APawn> PawnPlayer = GetPawn())
 	{
-		PawnPlayer->AddMovementInput({0.0f, 0.0f, 1.0f}, AxisValue);
+		//PawnPlayer->AddMovementInput({0.0f, 0.0f, 1.0f}, AxisValue);
 	}
 }

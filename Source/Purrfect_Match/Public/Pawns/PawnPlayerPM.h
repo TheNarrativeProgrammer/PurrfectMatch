@@ -6,8 +6,13 @@
 #include "GameFramework/Pawn.h"
 #include "PawnPlayerPM.generated.h"
 
+struct FInputActionValue;
 class UFloatingPawnMovement;
 class UStaticMeshComponent;
+class AGameBoard;
+class UDelegateBindingCompPlayerPawn;
+class UInputMappingContext;
+class UInputAction;
 
 UCLASS()
 class PURRFECT_MATCH_API APawnPlayerPM : public APawn
@@ -21,6 +26,46 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DelegateBindingComponent")
+	TObjectPtr<UDelegateBindingCompPlayerPawn> DelegateBindingCompPlayerPawn;
+
+	UPROPERTY(EditAnywhere, Category="Gameboard")
+	TObjectPtr<AGameBoard> GameBoard;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Gameboard")
+	int32 indexLeft = 1;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Gameboard")
+	int32 indexRight = 0;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Gameboard")
+	int32 boardWidth = 6;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Gameboard")
+	int32 boardHeight = 12;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Gameboard")
+	int32 lastIndex = 71;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Gameboard")
+	int32 firstIndexOfLastRow = 66;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Input")
+	TObjectPtr<UInputMappingContext> PlayerInputMappingContext;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Input|Actions")
+	TObjectPtr<UInputAction> IAMoveHorizontal;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Input|Actions")
+	TObjectPtr<UInputAction> IAMoveVertical;
+
+	UFUNCTION()
+	void MoveHorizontal(const FInputActionValue& InputActionValue);
+
+	UFUNCTION()
+	void MoveVertical(const FInputActionValue& InputActionValue);
+	
 
 public:	
 	// Called every frame
@@ -37,5 +82,16 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	UFloatingPawnMovement* FloatingPawnMovement;
+
+	UFUNCTION()
+	void SetStartLocation();
+
+	UFUNCTION()
+	void SetPawnLocation(FVector Location);
+
+	UFUNCTION()
+	void SetBoardWithAndHeight(int32 InBoardWidth, int32 InHeight);
+
+	
 
 };

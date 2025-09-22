@@ -8,6 +8,7 @@
 #include "BoardManager.generated.h"
 
 class AGameBoard;
+class UDelegateBindingCompBoardManager;
 
 UCLASS()
 class PURRFECT_MATCH_API ABoardManager : public AActor
@@ -18,9 +19,14 @@ public:
 	// Sets default values for this actor's properties
 	ABoardManager();
 
+	
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Binding Component")
+	TObjectPtr<UDelegateBindingCompBoardManager> DelegateBindingCompBoardManager;
 
 	UPROPERTY(EditAnywhere)
 	int32 level;
@@ -66,5 +72,8 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION()
+	void PopulateBoardWithInitialTiles();
 
 };
