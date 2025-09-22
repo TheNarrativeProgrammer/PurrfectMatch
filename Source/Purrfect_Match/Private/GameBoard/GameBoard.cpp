@@ -93,6 +93,79 @@ void AGameBoard::SpawnPlaneAtLocation(FVector PlaneSpawnLocation)
 	}
 }
 
+void AGameBoard::CheckforLinesHorizontal()
+{
+
+	int32 pointsScored = 0;
+
+	//Start match at beginning of row
+	for (int row = 0; row < height; row++)
+	{
+		int32 rowIndexStart = row * width;
+		if (IsLineEmpty(rowIndexStart))
+		{
+			break;
+		}
+
+		
+		int32 countMatchingTiles = 1;
+		//Set ptr for window. Left is at the beginning of the row and right is 1 index after.
+		int32 rowIndexLeft = rowIndexStart;
+		int32 rowIndexRight = rowIndexLeft + 1;
+
+		//Check matches in the row. Exit loop at end of row
+		while (rowIndexRight < rowIndexStart + width)
+		{
+			const FGameplayTag tagLeft = TileStatuses[rowIndexLeft].TileInfo->GameplayTag;
+			const FGameplayTag tagRight = TileStatuses[rowIndexRight].TileInfo->GameplayTag;
+			const FGameplayTag emptyTag = FGameplayTag::RequestGameplayTag(FName("EmptyTile"));
+
+			if (tagLeft == tagRight && tagLeft != emptyTag)
+			{
+				countMatchingTiles++;
+			}
+			else
+			{
+				if (countMatchingTiles >= minimumMatchingForPoint)
+				{
+					pointsScored += countMatchingTiles * pointsPerMatch;
+				}
+				countMatchingTiles = 1;
+				rowIndexLeft = rowIndexRight;
+			}
+			rowIndexRight++;
+		}
+
+		//At end of row, check matching tile count
+		if (countMatchingTiles >= minimumMatchingForPoint)
+		{
+			pointsScored += countMatchingTiles * pointsPerMatch;
+		}
+	}
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Scored: %d"), pointsScored));
+}
+
+bool AGameBoard::IsLineEmpty(int32 rowStartIndex)
+{
+
+	for (int32 i = 0; i < width; i++)
+	{
+		int32 index = rowStartIndex + i;
+
+		if (TileStatuses.IsValidIndex(index) == false)
+		{
+			return true;
+		}
+
+		if (TileStatuses[index].TileInfo->GameplayTag != FGameplayTag::RequestGameplayTag(FName("EmptyTile")))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+
 // Called every frame
 void AGameBoard::Tick(float DeltaTime)
 {
@@ -118,6 +191,8 @@ void AGameBoard::SwitchTiles(int32 indexLeft, int32 indexRight)
 
 	ChangeTileStatus(indexLeft, RightStatus);
 	ChangeTileStatus(indexRight, LeftStatus);
+
+	CheckforLinesHorizontal();
 }
 
 void AGameBoard::MoveTileRowsUpOneRow()

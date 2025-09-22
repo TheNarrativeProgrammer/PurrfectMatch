@@ -51,6 +51,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tile Info")
 	TObjectPtr<UTileInfoManagerComponent> TileInfoManagerComponent;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Points")
+	int32 minimumMatchingForPoint = 3;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Points")
+	int32 pointsPerMatch = 5;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Dimensions")
 	int32 width = 6;
 
@@ -98,6 +104,12 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void SpawnPlaneAtLocation(FVector PlaneSpawnLocation);
+
+	UFUNCTION(BlueprintCallable)
+	void CheckforLinesHorizontal();
+
+	UFUNCTION(BlueprintCallable)
+	bool IsLineEmpty(int32 rowStartIndex);
 
 	
 
