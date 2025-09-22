@@ -55,6 +55,13 @@ void APawnPlayerPM::MoveHorizontal(const FInputActionValue& InputActionValue)
 			indexLeft=1;
 			return;
 		}
+		if (indexRight  % boardWidth == 0)
+		{
+			indexLeft += axisValue * 2;
+			indexRight += axisValue * 2;
+			DelegateBindingCompPlayerPawn->GameStatePM->PawnPlayerRequestTileLocationDelegate.Broadcast(indexLeft);
+			return;
+		}
 	}
 
 	if (axisValue > 0)
@@ -65,19 +72,15 @@ void APawnPlayerPM::MoveHorizontal(const FInputActionValue& InputActionValue)
 			indexLeft = lastIndex;
 			return;
 		}
+		if ((indexLeft + 1)  % boardWidth == 0)
+		{
+			indexLeft += axisValue * 2;
+			indexRight += axisValue * 2;
+			DelegateBindingCompPlayerPawn->GameStatePM->PawnPlayerRequestTileLocationDelegate.Broadcast(indexLeft);
+			return;
+		}
 	}
-
-	if ((indexLeft + 1)  % boardWidth == 0)
-	{
-		indexLeft += axisValue * 2;
-		indexRight += axisValue * 2;
-	}
-	else if (indexRight  % boardWidth == 0)
-	{
-		indexLeft += axisValue * 2;
-		indexRight += axisValue * 2;
-	}
-	else
+	
 	{
 		indexLeft += axisValue;
 		indexRight += axisValue;
@@ -117,6 +120,11 @@ void APawnPlayerPM::MoveVertical(const FInputActionValue& InputActionValue)
 	
 }
 
+void APawnPlayerPM::SwitchTiles(const FInputActionValue& InputActionValue)
+{
+	DelegateBindingCompPlayerPawn->GameStatePM->GameBoardSwitchTilesDelegate.Broadcast(indexLeft, indexRight);
+}
+
 // Called every frame
 void APawnPlayerPM::Tick(float DeltaTime)
 {
@@ -152,6 +160,11 @@ void APawnPlayerPM::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 						if (IsValid(IAMoveVertical))
 						{
 							EnhancedInputComponent->BindAction(IAMoveVertical, ETriggerEvent::Triggered, this, &APawnPlayerPM::MoveVertical);
+						}
+
+						if (IsValid(IAMoveVertical))
+						{
+							EnhancedInputComponent->BindAction(IASwitchTiles, ETriggerEvent::Triggered, this, &APawnPlayerPM::SwitchTiles);
 						}
 					}
 				}

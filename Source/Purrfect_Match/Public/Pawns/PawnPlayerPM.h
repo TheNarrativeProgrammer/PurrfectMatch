@@ -60,11 +60,17 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Input|Actions")
 	TObjectPtr<UInputAction> IAMoveVertical;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Input|Actions")
+	TObjectPtr<UInputAction> IASwitchTiles;
+
 	UFUNCTION()
 	void MoveHorizontal(const FInputActionValue& InputActionValue);
 
 	UFUNCTION()
 	void MoveVertical(const FInputActionValue& InputActionValue);
+
+	UFUNCTION()
+	void SwitchTiles(const FInputActionValue& InputActionValue);
 	
 
 public:	

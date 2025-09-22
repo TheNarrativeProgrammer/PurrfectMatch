@@ -25,6 +25,9 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tile Info Empty")
+	TObjectPtr<UTileInfo> TileInfoEmpty;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tile Info Sun")
 	TObjectPtr<UTileInfo> TileInfoAffectionSun;
 

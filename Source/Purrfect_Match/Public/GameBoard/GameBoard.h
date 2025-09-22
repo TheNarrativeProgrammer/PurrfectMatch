@@ -72,6 +72,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Board")
 	TArray<FTileStatus> TileStatuses;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tile info")
+	UMaterialInterface* MaterialDefaultEmptyTile;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Board")
 	int32 indexOfArray = 0;
 
@@ -109,6 +112,9 @@ public:
 
 	UFUNCTION()
 	void ChangeTileStatus(int32 IndexTile, FTileStatus NewStatus);
+
+	UFUNCTION()
+	void SwitchTiles(int32 indexLeft, int32 indexRight);
 
 	UFUNCTION()
 	void MoveTileRowsUpOneRow();

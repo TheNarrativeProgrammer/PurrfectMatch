@@ -5,6 +5,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "Core/GameStatePM.h"
 #include "Components/Binding/DelegateBindingCompGameBoard.h"
+#include "Logging/StructuredLog.h"
+#include "SparseVolumeTexture/SparseVolumeTexture.h"
 
 // Sets default values
 AGameBoard::AGameBoard()
@@ -30,6 +32,9 @@ void AGameBoard::BeginPlay()
 			int32 index = GetIndexOfArray(x, y);
 			FVector PlaneSpawnLocation = GetTileLocationByXandY(x, y);
 			SpawnPlaneAtLocation(PlaneSpawnLocation);
+			FGameplayTag GameBoardGameTag = FGameplayTag::RequestGameplayTag(FName("EmptyTile"));
+			TileStatuses[index].TileInfo = GetTileInfo(GameBoardGameTag);
+			ChangeTileStatus(index, TileStatuses[index]);
 		}
 	}
 
@@ -84,6 +89,7 @@ void AGameBoard::SpawnPlaneAtLocation(FVector PlaneSpawnLocation)
 			StaticMeshComponent->SetMaterial(0, BoardTileMaterial);
 		}
 		BoardTiles.AddUnique(StaticMeshComponent);
+		
 	}
 }
 
@@ -96,8 +102,22 @@ void AGameBoard::Tick(float DeltaTime)
 
 void AGameBoard::ChangeTileStatus(int32 IndexTile, FTileStatus NewStatus)
 {
+	if (NewStatus.TileInfo == nullptr)
+	{
+		UE_LOGFMT(LogTemp, Warning, "Missing empty DA in the TileInfo Component. TileInfo withing TileStatus is nullptr for empty tiles");
+		return;
+	}
 	TileStatuses[IndexTile] = NewStatus;
 	BoardTiles[IndexTile]->SetMaterial(0, NewStatus.TileInfo->Material);
+}
+
+void AGameBoard::SwitchTiles(int32 indexLeft, int32 indexRight)
+{
+	FTileStatus LeftStatus = TileStatuses[indexLeft];
+	FTileStatus RightStatus = TileStatuses[indexRight];
+
+	ChangeTileStatus(indexLeft, RightStatus);
+	ChangeTileStatus(indexRight, LeftStatus);
 }
 
 void AGameBoard::MoveTileRowsUpOneRow()
@@ -128,6 +148,10 @@ void AGameBoard::PopulateRow(int32 ColumnIndex, TArray<FGameplayTag> GameplayTag
 
 UTileInfo* AGameBoard::GetTileInfo(FGameplayTag GameplayTag)
 {
+	if (GameplayTag == FGameplayTag::RequestGameplayTag(FName("EmptyTile")))
+	{
+		return TileInfoManagerComponent->TileInfoEmpty;
+	}
 	if (GameplayTag == FGameplayTag::RequestGameplayTag(FName("Affection.Sun")))
 	{
 		return TileInfoManagerComponent->TileInfoAffectionSun;

@@ -17,6 +17,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGameBoardOnRequestSendTileLocationS
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGameBoardSendBoardDimensionsSignature, int32, width, int32, height);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGameBoardSwitchTilesSignature, int32, indexLeft, int32, indexRight);
+
 //PlayerPawn
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPawnPlayerRequestTileLocationSignature, int32, leftIndex);
 
@@ -31,6 +33,9 @@ public:
 
 	UPROPERTY(Blueprintcallable, Blueprintable, BlueprintAssignable, Category = "Gameboard Delegate")
 	FGameBoardSendBoardDimensionsSignature GameBoardSendBoardDimensionsDelegate;
+
+	UPROPERTY(Blueprintcallable, Blueprintable, BlueprintAssignable, Category = "Gameboard Delegate")
+	FGameBoardSwitchTilesSignature GameBoardSwitchTilesDelegate;
 
 	//pawn player
 	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintCallable, Category = "GameBoard Delegate")

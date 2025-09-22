@@ -13,6 +13,7 @@ void UDelegateBindingCompGameBoard::BindDelegates()
 		if (AGameBoard* GameBoardOwner = Cast<AGameBoard>(GetOwner()))
 		{
 			GameStatePM->PawnPlayerRequestTileLocationDelegate.AddUniqueDynamic(GameBoardOwner, &AGameBoard::GetTileLocation);
+			GameStatePM->GameBoardSwitchTilesDelegate.AddUniqueDynamic(GameBoardOwner, &AGameBoard::SwitchTiles);
 		}
 	}
 }
