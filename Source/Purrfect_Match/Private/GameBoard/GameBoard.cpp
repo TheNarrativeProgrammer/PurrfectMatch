@@ -356,7 +356,11 @@ void AGameBoard::SwitchTiles(int32 indexLeft, int32 indexRight)
 	
 	CheckforLinesHorizontal();
 	CheckforLinesVertical();
-	TileComponent->TileLineMatchProcessorComponent->ProcessMatches();
+
+	if (TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.IsEmpty() == false)
+	{
+		TileComponent->TileLineMatchProcessorComponent->ProcessMatches();
+	}
 }
 
 void AGameBoard::MoveTileRowsUpOneRow()

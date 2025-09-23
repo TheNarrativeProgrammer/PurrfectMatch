@@ -3,6 +3,7 @@
 
 #include "Components/TileLineMatchProcessorComponent.h"
 #include "Components/TileComponent.h"
+#include "Components/TilePlanesComponent.h"
 #include "Data/TileStatus.h"
 #include "GameBoard/GameBoard.h"
 
@@ -46,6 +47,11 @@ void UTileLineMatchProcessorComponent::ProcessMatches()
 					{
 						NewTileStatus.TileInfo = TileComponent->TileInfoManagerComponent->GetTileInfo(GameplayTagEmptyTile);
 						TileInfoManagerComponent->ChangeTileStatus(indexOfMatchedTiles[i].indices[j], NewTileStatus);
+
+						if (UTilePlanesComponent* TilePlanesComponent = GameBoardOwner->GetComponentByClass<UTilePlanesComponent>())
+						{
+							TilePlanesComponent->ChangeTileImage(indexOfMatchedTiles[i].indices[j], NewTileStatus);
+						}
 					}
 				}
 			}
