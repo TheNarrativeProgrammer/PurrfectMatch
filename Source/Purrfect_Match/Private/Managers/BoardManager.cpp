@@ -47,7 +47,6 @@ TArray<FGameplayTag> ABoardManager::GenerateTileLine()
 		}
 	}
 	return NewRowTags;
-	
 }
 
 FGameplayTag ABoardManager::GetTileTag(int32 tileIconNumber)

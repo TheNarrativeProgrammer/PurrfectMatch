@@ -37,6 +37,7 @@ struct FMatchGroup
 
 class UTileInfo;
 class UDelegateBindingCompGameBoard;
+class UTilePopulatorComponent;
 
 UCLASS()
 class PURRFECT_MATCH_API AGameBoard : public AActor
@@ -55,6 +56,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Delegate binding component")
 	TObjectPtr<UDelegateBindingCompGameBoard> DelegateBindingCompGameBoard;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Delegate binding component")
+	TObjectPtr<UTilePopulatorComponent> TilePopulatorComponent;
 	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tile Info")

@@ -3,33 +3,35 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Components/ActorComponent.h"
 #include  "GameplayTags.h"
-#include "BoardManager.generated.h"
+#include "TilePopulatorComponent.generated.h"
+
 
 class AGameBoard;
 class UDelegateBindingCompBoardManager;
-
-UCLASS()
-class PURRFECT_MATCH_API ABoardManager : public AActor
+UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+class PURRFECT_MATCH_API UTilePopulatorComponent : public UActorComponent
 {
 	GENERATED_BODY()
-	
+
 public:	
-	// Sets default values for this actor's properties
-	ABoardManager();
+	// Sets default values for this component's properties
+	UTilePopulatorComponent();
 
 	
 
 protected:
-	// Called when the game starts or when spawned
+	// Called when the game starts
 	virtual void BeginPlay() override;
+
+	virtual void InitializeComponent() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Binding Component")
 	TObjectPtr<UDelegateBindingCompBoardManager> DelegateBindingCompBoardManager;
 
 	UPROPERTY(EditAnywhere)
-	int32 level;
+	int32 level = 1;
 
 	UPROPERTY()
 	FGameplayTag TagAffectionSun;
@@ -65,16 +67,20 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	TArray<FGameplayTag> GenerateTileLine();
-	
+
+	UFUNCTION(BlueprintCallable)
+	FGameplayTag GenerateTileSingle();
 
 	UFUNCTION(BlueprintCallable)
 	FGameplayTag GetTileTag(int32 tileIconNumber);
 
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
 	void PopulateBoardWithInitialTiles();
+	
+	// Called every frame
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+		
 };

@@ -4,6 +4,7 @@
 #include "GameBoard/GameBoard.h"
 #include "Components/StaticMeshComponent.h"
 #include "Core/GameStatePM.h"
+#include "Components/TilePopulatorComponent.h"
 #include "Components/Binding/DelegateBindingCompGameBoard.h"
 #include "Logging/StructuredLog.h"
 #include "SparseVolumeTexture/SparseVolumeTexture.h"
@@ -12,6 +13,8 @@
 AGameBoard::AGameBoard()
 {
 	TileInfoManagerComponent = CreateDefaultSubobject<UTileInfoManagerComponent>(TEXT("Tile Info"));
+
+	TilePopulatorComponent = CreateDefaultSubobject<UTilePopulatorComponent>(TEXT("TilePopulatorComponent"));
 
 	DelegateBindingCompGameBoard = CreateDefaultSubobject<UDelegateBindingCompGameBoard>(TEXT("DelegateBindingCompGameBoard"));
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.

@@ -2,6 +2,9 @@
 
 
 #include "Components/Binding/DelegateBindingCompBoardManager.h"
+
+#include "Components/TilePopulatorComponent.h"
+#include "GameBoard/GameBoard.h"
 #include "Managers/BoardManager.h"
 
 void UDelegateBindingCompBoardManager::BindDelegates()
@@ -13,6 +16,14 @@ void UDelegateBindingCompBoardManager::BindDelegates()
 		if (ABoardManager* BoardManagerOwner = Cast<ABoardManager>(GetOwner()))
 		{
 			GameStatePM->GameBoardPopulatedDelegate.AddDynamic(BoardManagerOwner, &ABoardManager::PopulateBoardWithInitialTiles);
+		}
+		if (AGameBoard* GameBoardOwner = Cast<AGameBoard>(GetOwner()))
+		{
+			if (UTilePopulatorComponent* TilePopulatorComponent = GameBoardOwner->GetComponentByClass<UTilePopulatorComponent>())
+			{
+				GameStatePM->GameBoardPopulatedDelegate.AddDynamic(TilePopulatorComponent, &UTilePopulatorComponent::PopulateBoardWithInitialTiles);
+			}
+			
 		}
 	}
 }

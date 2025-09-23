@@ -31,7 +31,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tile Info Sun")
 	TObjectPtr<UTileInfo> TileInfoAffectionSun;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tile Info Plany")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tile Info Plant")
 	TObjectPtr<UTileInfo> TileInfoAffectionPlant;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tile Info Toy")
