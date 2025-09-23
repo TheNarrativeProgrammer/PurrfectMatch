@@ -34,7 +34,7 @@ void ABoardManager::BeginPlay()
 TArray<FGameplayTag> ABoardManager::GenerateTileLine()
 {
 	TArray<FGameplayTag> NewRowTags;
-	for (int32 index = 0; index < GameBoard->GetWidth(); index++)
+	for (int32 index = 0; index < IBoardable::Execute_GetBoardWidth(GameBoard); index++)
 	{
 		if (FMath::FRand() < chanceOfGoalTile)
 		{

@@ -49,18 +49,22 @@ void UTilePopulatorComponent::InitializeComponent()
 TArray<FGameplayTag> UTilePopulatorComponent::GenerateTileLine()
 {
 	TArray<FGameplayTag> NewRowTags;
-	for (int32 index = 0; index < GameBoard->GetWidth(); index++)
+	if (GameBoard->Implements<UBoardable>())
 	{
-		if (FMath::FRand() < chanceOfGoalTile)
+		for (int32 index = 0; index < IBoardable::Execute_GetBoardWidth(GameBoard); index++)
 		{
-			NewRowTags.Add(GetTileTag(4));
-		}
-		else
-		{
-			int32 RandomNumber = FMath::RandRange(0, 3);
-			NewRowTags.Add(GetTileTag(RandomNumber));
+			if (FMath::FRand() < chanceOfGoalTile)
+			{
+				NewRowTags.Add(GetTileTag(4));
+			}
+			else
+			{
+				int32 RandomNumber = FMath::RandRange(0, 3);
+				NewRowTags.Add(GetTileTag(RandomNumber));
+			}
 		}
 	}
+	
 	return NewRowTags;
 }
 

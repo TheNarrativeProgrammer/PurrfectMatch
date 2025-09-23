@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Data/TileInfo.h"
+#include "Data/TileStatus.h"
 #include "TileInfoManagerComponent.generated.h"
 
 
@@ -16,6 +17,8 @@ class PURRFECT_MATCH_API UTileInfoManagerComponent : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UTileInfoManagerComponent();
+
+	virtual void InitializeComponent() override;
 
 protected:
 	// Called when the game starts
@@ -48,6 +51,15 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tile Info Dog")
 	TObjectPtr<UTileInfo> TileInfoGoalDog;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Board")
+	TArray<FTileStatus> TileStatuses;
+
+	UFUNCTION()
+	UTileInfo* GetTileInfo(FGameplayTag GameplayTag);
+
+	UFUNCTION()
+	void ChangeTileStatus(int32 IndexTile, FTileStatus NewStatus);
 
 		
 };
