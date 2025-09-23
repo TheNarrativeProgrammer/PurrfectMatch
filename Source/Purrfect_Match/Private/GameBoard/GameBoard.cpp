@@ -18,7 +18,7 @@ AGameBoard::AGameBoard()
 	PrimaryActorTick.bCanEverTick = true;
 
 	TileStatuses.SetNum(width * height);
-
+	GameplayTagEmptyTile = FGameplayTag::RequestGameplayTag(FName("EmptyTile"));
 }
 
 // Called when the game starts or when spawned
@@ -102,16 +102,23 @@ void AGameBoard::CheckforLinesHorizontal()
 	for (int row = 0; row < height; row++)
 	{
 		int32 rowIndexStart = row * width;
-		if (IsLineEmpty(rowIndexStart))
-		{
-			break;
-		}
 
+		//If the first tile is empty, check if the remaining row is empty.
+		if (TileStatuses[rowIndexStart].TileInfo->GameplayTag == FGameplayTag::RequestGameplayTag("EmptyTile"))
+		{
+			if (IsLineEmptyRow(rowIndexStart))
+			{
+				continue;
+			}
+		}
 		
 		int32 countMatchingTiles = 1;
 		//Set ptr for window. Left is at the beginning of the row and right is 1 index after.
 		int32 rowIndexLeft = rowIndexStart;
 		int32 rowIndexRight = rowIndexLeft + 1;
+
+		TArray<int32> indexOfPossibledMatches;
+		indexOfPossibledMatches.Add(rowIndexLeft);
 
 		//Check matches in the row. Exit loop at end of row
 		while (rowIndexRight < rowIndexStart + width)
@@ -123,15 +130,21 @@ void AGameBoard::CheckforLinesHorizontal()
 			if (tagLeft == tagRight && tagLeft != emptyTag)
 			{
 				countMatchingTiles++;
+				indexOfPossibledMatches.Add(rowIndexRight);
 			}
 			else
 			{
 				if (countMatchingTiles >= minimumMatchingForPoint)
 				{
+					FMatchGroup MatchGroup;
+					MatchGroup.indices = indexOfPossibledMatches;
+					indexOfMatchedTiles.Add(MatchGroup);
 					pointsScored += countMatchingTiles * pointsPerMatch;
 				}
 				countMatchingTiles = 1;
 				rowIndexLeft = rowIndexRight;
+				indexOfPossibledMatches.Empty();
+				indexOfPossibledMatches.Add(rowIndexLeft);
 			}
 			rowIndexRight++;
 		}
@@ -139,19 +152,21 @@ void AGameBoard::CheckforLinesHorizontal()
 		//At end of row, check matching tile count
 		if (countMatchingTiles >= minimumMatchingForPoint)
 		{
+			FMatchGroup MatchGroup;
+			MatchGroup.indices = indexOfPossibledMatches;
+			indexOfMatchedTiles.Add(MatchGroup);
 			pointsScored += countMatchingTiles * pointsPerMatch;
 		}
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Scored: %d"), pointsScored));
+	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, FString::Printf(TEXT("Scored: %d"), pointsScored));
 }
 
-bool AGameBoard::IsLineEmpty(int32 rowStartIndex)
+bool AGameBoard::IsLineEmptyRow(int32 rowStartIndex)
 {
-
-	for (int32 i = 0; i < width; i++)
+	for (int32 offset = 0; offset < width; offset++)
 	{
-		int32 index = rowStartIndex + i;
-
+		int32 index = rowStartIndex + offset;
+		
 		if (TileStatuses.IsValidIndex(index) == false)
 		{
 			return true;
@@ -163,6 +178,107 @@ bool AGameBoard::IsLineEmpty(int32 rowStartIndex)
 		}
 	}
 	return true;
+}
+
+void AGameBoard::CheckforLinesVertical()
+{
+	int32 pointsScored = 0;
+	
+	for (int32 col = 0; col < width; col++)
+	{
+		int32 columnIndexBottom = col;
+		int32 columnIndexUp = columnIndexBottom + width;
+		int32 countMatchingTiles = 1;
+
+		if (TileStatuses[columnIndexBottom].TileInfo->GameplayTag == FGameplayTag::RequestGameplayTag("EmptyTile"))
+		{
+			if (IsLineEmptyColumn(columnIndexBottom))continue;
+		}
+
+		TArray<int32> indexOfPossibledMatches;
+		indexOfPossibledMatches.Add(columnIndexBottom);
+		
+		while (columnIndexUp < TileStatuses.Num() )
+		{
+			
+			if (TileStatuses.IsValidIndex(columnIndexUp) == false)
+			{
+				break;
+			}
+			FGameplayTag tagBottom = TileStatuses[columnIndexBottom].TileInfo->GameplayTag;
+			FGameplayTag tagUp = TileStatuses[columnIndexUp].TileInfo->GameplayTag;
+			FGameplayTag emptyTag = FGameplayTag::RequestGameplayTag("EmptyTile");
+			
+			if (tagBottom != emptyTag && tagUp == tagBottom)
+			{
+				indexOfPossibledMatches.Add(columnIndexUp);
+				countMatchingTiles++;
+			}
+			else
+			{
+				if (countMatchingTiles >= minimumMatchingForPoint)
+				{
+					FMatchGroup MatchGroup;
+					MatchGroup.indices = indexOfPossibledMatches;
+					indexOfMatchedTiles.Add(MatchGroup);
+					pointsScored += countMatchingTiles * pointsPerMatch;
+				}
+				indexOfPossibledMatches.Empty();
+				countMatchingTiles = 1;
+				columnIndexBottom = columnIndexUp;
+				indexOfPossibledMatches.Add(columnIndexBottom);
+			}
+			columnIndexUp += width;
+		}
+		//At end of row, check matching tile count
+		if (countMatchingTiles >= minimumMatchingForPoint)
+		{
+			FMatchGroup MatchGroup;
+			MatchGroup.indices = indexOfPossibledMatches;
+			indexOfMatchedTiles.Add(MatchGroup);
+			pointsScored += countMatchingTiles * pointsPerMatch;
+		}
+	}
+	GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Red, FString::Printf(TEXT("Scored: %d"), pointsScored));
+}
+
+bool AGameBoard::IsLineEmptyColumn(int32 columnStartIndex)
+{
+	for (int32 row = 0; row < height; row++)
+	{
+		int32 index = columnStartIndex + (row * width);
+		
+		if (TileStatuses.IsValidIndex(index) == false)
+		{
+			return true;
+		}
+
+		if (TileStatuses[index].TileInfo->GameplayTag != FGameplayTag::RequestGameplayTag("EmptyTile"))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+void AGameBoard::ProcessMatches()
+{
+	if (indexOfMatchedTiles.IsEmpty())
+	{
+		return;
+	}
+	
+	for (int32 i = 0; i < indexOfMatchedTiles.Num(); i++)
+	{
+		for (int32 j = 0; j < indexOfMatchedTiles[i].indices.Num(); j++)
+		{
+			FTileStatus NewTileStatus;
+			NewTileStatus.TileInfo = GetTileInfo(GameplayTagEmptyTile);
+			ChangeTileStatus(indexOfMatchedTiles[i].indices[j], NewTileStatus);
+		}
+	}
+
+	indexOfMatchedTiles.Empty();
 }
 
 
@@ -193,6 +309,8 @@ void AGameBoard::SwitchTiles(int32 indexLeft, int32 indexRight)
 	ChangeTileStatus(indexRight, LeftStatus);
 
 	CheckforLinesHorizontal();
+	CheckforLinesVertical();
+	ProcessMatches();
 }
 
 void AGameBoard::MoveTileRowsUpOneRow()

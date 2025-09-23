@@ -24,6 +24,15 @@ struct FTileStatus
 	TObjectPtr<UTileInfo> TileInfo = nullptr;
 };
 
+USTRUCT(BlueprintType)
+struct FMatchGroup
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<int32> indices;
+};
+
 
 
 class UTileInfo;
@@ -57,6 +66,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Points")
 	int32 pointsPerMatch = 5;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Points")
+	TArray<FMatchGroup> indexOfMatchedTiles;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Dimensions")
 	int32 width = 6;
 
@@ -71,6 +83,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Dimensions")
 	int32 tileMoveAmount = tileSize + tileGap;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Dimensions")
+	FGameplayTag GameplayTagEmptyTile;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Board")
 	TArray<UStaticMeshComponent*> BoardTiles;
@@ -109,7 +124,18 @@ protected:
 	void CheckforLinesHorizontal();
 
 	UFUNCTION(BlueprintCallable)
-	bool IsLineEmpty(int32 rowStartIndex);
+	bool IsLineEmptyRow(int32 rowStartIndex);
+
+	UFUNCTION(BlueprintCallable)
+	void CheckforLinesVertical();
+
+	UFUNCTION(BlueprintCallable)
+	bool IsLineEmptyColumn(int32 columnStartIndex);
+
+	UFUNCTION(BlueprintCallable)
+	void ProcessMatches();
+
+	
 
 	
 
