@@ -9,6 +9,7 @@
 #include "Components/Binding/DelegateBindingCompGameBoard.h"
 #include "Components/TileComponent.h"
 #include "Components/TilePlanesComponent.h"
+#include "Components/ScoreComponent.h"
 #include "Logging/StructuredLog.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "SparseVolumeTexture/SparseVolumeTexture.h"
@@ -22,6 +23,7 @@ AGameBoard::AGameBoard()
 
 	DelegateBindingCompGameBoard = CreateDefaultSubobject<UDelegateBindingCompGameBoard>(TEXT("DelegateBindingCompGameBoard"));
 	TileComponent = CreateDefaultSubobject<UTileComponent>(TEXT("TileComponent"));
+	ScoreComponent = CreateDefaultSubobject<UScoreComponent>(TEXT("ScoreComponent"));
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -156,12 +158,12 @@ void AGameBoard::CheckforLinesHorizontal()
 			}
 			else
 			{
-				if (countMatchingTiles >= minimumMatchingForPoint)
+				if (countMatchingTiles >= ScoreComponent->minimumMatchingForPoint)
 				{
 					FMatchGroup MatchGroup;
 					MatchGroup.indices = indexOfPossibledMatches;
 					TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.Add(MatchGroup);
-					pointsScored += countMatchingTiles * pointsPerMatch;
+					pointsScored += countMatchingTiles * ScoreComponent->pointsPerMatch;
 				}
 				countMatchingTiles = 1;
 				rowIndexLeft = rowIndexRight;
@@ -172,14 +174,15 @@ void AGameBoard::CheckforLinesHorizontal()
 		}
 
 		//At end of row, check matching tile count
-		if (countMatchingTiles >= minimumMatchingForPoint)
+		if (countMatchingTiles >= ScoreComponent->minimumMatchingForPoint)
 		{
 			FMatchGroup MatchGroup;
 			MatchGroup.indices = indexOfPossibledMatches;
 			TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.Add(MatchGroup);
-			pointsScored += countMatchingTiles * pointsPerMatch;
+			pointsScored += countMatchingTiles * ScoreComponent->pointsPerMatch;
 		}
 	}
+	ScoreComponent->UpdateScore(pointsScored);
 	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, FString::Printf(TEXT("Scored: %d"), pointsScored));
 }
 
@@ -238,12 +241,12 @@ void AGameBoard::CheckforLinesVertical()
 			}
 			else
 			{
-				if (countMatchingTiles >= minimumMatchingForPoint)
+				if (countMatchingTiles >= ScoreComponent->minimumMatchingForPoint)
 				{
 					FMatchGroup MatchGroup;
 					MatchGroup.indices = indexOfPossibledMatches;
 					TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.Add(MatchGroup);
-					pointsScored += countMatchingTiles * pointsPerMatch;
+					pointsScored += countMatchingTiles * ScoreComponent->pointsPerMatch;
 				}
 				indexOfPossibledMatches.Empty();
 				countMatchingTiles = 1;
@@ -253,14 +256,15 @@ void AGameBoard::CheckforLinesVertical()
 			columnIndexUp += width;
 		}
 		//At end of row, check matching tile count
-		if (countMatchingTiles >= minimumMatchingForPoint)
+		if (countMatchingTiles >= ScoreComponent->minimumMatchingForPoint)
 		{
 			FMatchGroup MatchGroup;
 			MatchGroup.indices = indexOfPossibledMatches;
 			TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.Add(MatchGroup);
-			pointsScored += countMatchingTiles * pointsPerMatch;
+			pointsScored += countMatchingTiles * ScoreComponent->pointsPerMatch;
 		}
 	}
+	ScoreComponent->UpdateScore(pointsScored);
 	GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Red, FString::Printf(TEXT("Scored: %d"), pointsScored));
 }
 

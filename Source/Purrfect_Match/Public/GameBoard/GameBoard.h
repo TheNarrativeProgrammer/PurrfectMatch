@@ -42,6 +42,7 @@
 class UTileInfo;
 class UDelegateBindingCompGameBoard;
 class UTilePopulatorComponent;
+class UScoreComponent;
 
 UCLASS()
 class PURRFECT_MATCH_API AGameBoard : public AActor,
@@ -69,6 +70,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component")
 	TObjectPtr<UTileComponent> TileComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component")
+	TObjectPtr<UScoreComponent> ScoreComponent;
+
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component")
 	// TObjectPtr<UTilePopulatorComponent> TilePopulatorComponent;
 	//
@@ -81,11 +85,7 @@ protected:
 
 	
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Points")
-	int32 minimumMatchingForPoint = 3;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Points")
-	int32 pointsPerMatch = 5;
+	
 
 	// UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Points")
 	// TArray<FMatchGroup> indexOfMatchedTiles;
