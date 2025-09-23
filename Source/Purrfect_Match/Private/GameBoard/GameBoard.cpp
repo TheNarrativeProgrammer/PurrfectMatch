@@ -7,6 +7,7 @@
 #include "Components/TilePopulatorComponent.h"
 #include "Components/Binding/DelegateBindingCompGameBoard.h"
 #include "Logging/StructuredLog.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "SparseVolumeTexture/SparseVolumeTexture.h"
 
 // Sets default values
@@ -92,6 +93,7 @@ void AGameBoard::SpawnPlaneAtLocation(FVector PlaneSpawnLocation)
 			StaticMeshComponent->SetMaterial(0, BoardTileMaterial);
 		}
 		BoardTiles.AddUnique(StaticMeshComponent);
+		StaticMeshComponent->SetupAttachment(GetRootComponent());
 		
 	}
 }
@@ -305,15 +307,36 @@ void AGameBoard::ChangeTileStatus(int32 IndexTile, FTileStatus NewStatus)
 
 void AGameBoard::SwitchTiles(int32 indexLeft, int32 indexRight)
 {
-	FTileStatus LeftStatus = TileStatuses[indexLeft];
-	FTileStatus RightStatus = TileStatuses[indexRight];
 
-	ChangeTileStatus(indexLeft, RightStatus);
-	ChangeTileStatus(indexRight, LeftStatus);
+	const FTransform TransformRight = BoardTiles[indexRight]->GetRelativeTransform();
+	const FTransform TransformLeft = BoardTiles[indexLeft]->GetRelativeTransform();
+	FLatentActionInfo LatentInfoRight;
+	LatentInfoRight.CallbackTarget = this;
+	LatentInfoRight.UUID = __LINE__;
+	LatentInfoRight.Linkage = 0;
+	LatentInfoRight.ExecutionFunction = NAME_None;
+	
+	UKismetSystemLibrary::MoveComponentTo(BoardTiles[indexLeft],TransformRight.GetLocation(), TransformRight.Rotator(),
+		false, false, 1.0f, false, EMoveComponentAction::Move, LatentInfoRight);
 
-	CheckforLinesHorizontal();
-	CheckforLinesVertical();
-	ProcessMatches();
+	FLatentActionInfo LatentInfoLeft;
+	LatentInfoLeft.CallbackTarget = this;
+	LatentInfoLeft.UUID = __LINE__;
+	LatentInfoLeft.Linkage = 0;
+	LatentInfoLeft.ExecutionFunction = NAME_None;
+
+	UKismetSystemLibrary::MoveComponentTo(BoardTiles[indexRight],TransformLeft.GetLocation(), TransformLeft.Rotator(),
+		false, false, 1.0f, false, EMoveComponentAction::Move, LatentInfoLeft);
+	
+	// FTileStatus LeftStatus = TileStatuses[indexLeft];
+	// FTileStatus RightStatus = TileStatuses[indexRight];
+	//
+	// ChangeTileStatus(indexLeft, RightStatus);
+	// ChangeTileStatus(indexRight, LeftStatus);
+	//
+	// CheckforLinesHorizontal();
+	// CheckforLinesVertical();
+	// ProcessMatches();
 }
 
 void AGameBoard::MoveTileRowsUpOneRow()
