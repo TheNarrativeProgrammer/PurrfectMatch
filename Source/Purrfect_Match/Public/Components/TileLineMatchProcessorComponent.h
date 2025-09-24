@@ -35,6 +35,18 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ProcessMatches();
 
+	UFUNCTION(BlueprintCallable)
+	void CheckforLinesHorizontal();
+
+	UFUNCTION(BlueprintCallable)
+	bool IsLineEmptyRow(int32 rowStartIndex);
+
+	UFUNCTION(BlueprintCallable)
+	void CheckforLinesVertical();
+
+	UFUNCTION(BlueprintCallable)
+	bool IsLineEmptyColumn(int32 columnStartIndex);
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

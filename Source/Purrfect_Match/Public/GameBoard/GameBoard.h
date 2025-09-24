@@ -140,17 +140,17 @@ protected:
 	// UFUNCTION(BlueprintCallable)
 	// void SpawnPlaneAtLocation(FVector PlaneSpawnLocation);
 
-	UFUNCTION(BlueprintCallable)
-	void CheckforLinesHorizontal();
+	// UFUNCTION(BlueprintCallable)
+	// void CheckforLinesHorizontal();
 
-	UFUNCTION(BlueprintCallable)
-	bool IsLineEmptyRow(int32 rowStartIndex);
+	// UFUNCTION(BlueprintCallable)
+	// bool IsLineEmptyRow(int32 rowStartIndex);
 
-	UFUNCTION(BlueprintCallable)
-	void CheckforLinesVertical();
+	// UFUNCTION(BlueprintCallable)
+	// void CheckforLinesVertical();
 
-	UFUNCTION(BlueprintCallable)
-	bool IsLineEmptyColumn(int32 columnStartIndex);
+	// UFUNCTION(BlueprintCallable)
+	// bool IsLineEmptyColumn(int32 columnStartIndex);
 
 	// UFUNCTION(BlueprintCallable)
 	// void ProcessMatches();
