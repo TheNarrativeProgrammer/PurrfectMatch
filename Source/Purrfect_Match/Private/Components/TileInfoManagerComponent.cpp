@@ -114,37 +114,35 @@ bool UTileInfoManagerComponent::IsTileBelowIsEmpty(int32 IndexTile, int32& Lowes
 		if (ActorOwner->Implements<UBoardable>())
 		{
 			int32 width = IBoardable::Execute_GetBoardWidth(ActorOwner);
-			if (IndexTile + width)
-			{
-				if (TileStatuses[IndexTile - width].TileInfo->GameplayTag == GameplayTagEmptyTile)
-				{
-					int32 indexOfLowestEmptyTile = IndexTile - width;
-					int32 multiplierIterator = 2;
+			
+					int32 CurrentIndex = IndexTile - width;
+					int32 LastValidEmptyIndex = -1;
 					
-					while (indexOfLowestEmptyTile >= 0)
+					while (CurrentIndex >= 0 && TileStatuses.IsValidIndex(CurrentIndex))
 					{
-						if (TileStatuses.IsValidIndex(IndexTile - width * multiplierIterator) == false)
+						if (TileStatuses[CurrentIndex].TileInfo && 
+							TileStatuses[CurrentIndex].TileInfo->GameplayTag == GameplayTagEmptyTile)
 						{
-							break;
-						}
-						if (TileStatuses[IndexTile - width * multiplierIterator].TileInfo->GameplayTag == GameplayTagEmptyTile)
-						{
-							multiplierIterator++;
-							indexOfLowestEmptyTile = indexOfLowestEmptyTile - (width * multiplierIterator) ;
+							LastValidEmptyIndex = CurrentIndex;
+							CurrentIndex -= width;
 						}
 						else
 						{
 							break;
 						}
 					}
-					LowestEmptyTile = indexOfLowestEmptyTile;
-					return true;
+
+					if (LastValidEmptyIndex != -1)
+					{
+						LowestEmptyTile = LastValidEmptyIndex;
+						return true;
+					}
 				}
 			}
-				
-		}
-	}
-	return false;
+		
+	
+	
+			return false;
 	
 }
 
@@ -157,9 +155,16 @@ void UTileInfoManagerComponent::CheckTilesBelowAndMove()
 			continue;
 		}
 
-		int32 LowestEmptyTile = INDEX_NONE;
+		int32 LowestEmptyTile = 0;
 		if (IsTileBelowIsEmpty(Index, LowestEmptyTile))
 		{
+			if (AActor* ActorOwner = Cast<AActor>(GetOwner()))
+			{
+				if (UTilePlanesComponent* TilePlanesComponent = ActorOwner->GetComponentByClass<UTilePlanesComponent>())
+				{
+					TilePlanesComponent->MovePlaneDown(Index, LowestEmptyTile);
+				}
+			}
 			MoveTileDown(Index, LowestEmptyTile);
 		}
 	}
@@ -180,15 +185,14 @@ void UTileInfoManagerComponent::MoveTileDown(int32 currentIndex, int32 NewIndex)
 			TileComponent->TilePlanesComponent->ChangeTileImage(currentIndex, EmptyStatus);
 			TileComponent->TilePlanesComponent->ChangeTileImage(NewIndex, NonEmptyStatus);
 
-			TileComponent->TileLineMatchProcessorComponent->CheckforLinesHorizontal();
-			TileComponent->TileLineMatchProcessorComponent->CheckforLinesVertical();
-			// CheckforLinesHorizontal();
-			// CheckforLinesVertical();
+			// TileComponent->TileLineMatchProcessorComponent->CheckforLinesHorizontal();
+			// TileComponent->TileLineMatchProcessorComponent->CheckforLinesVertical();
 
-			if (TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.IsEmpty() == false)
-			{
-				TileComponent->TileLineMatchProcessorComponent->ProcessMatches();
-			}
+			//
+			// if (TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.IsEmpty() == false)
+			// {
+			// 	TileComponent->TileLineMatchProcessorComponent->ProcessMatches();
+			
 		}
 	}
 	

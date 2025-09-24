@@ -35,6 +35,37 @@ public:
 	UFUNCTION()
 	void ChangeTileImage(int32 IndexTile, FTileStatus NewStatus);
 
+	UFUNCTION()
+	void MovePlaneDown(int32 IndexCurrent, int32 IndexDestination);
+
+	UFUNCTION()
+	void SwitchPlanes(int32 IndexLeft, int32 IndexRight);
+
+	UFUNCTION()
+	void ToggleVisibilityOfTilePlane(int32 Index, bool IsVisible);
+
+	UFUNCTION()
+	void ChangeAppearanceOfPlaneToMimicEmpty(int32 Index);
+
+	UFUNCTION()
+	void DestroyMovePlane(UStaticMeshComponent* StaticMeshComponent, float DestroyAfterDuration);
+
+	UFUNCTION()
+	UStaticMeshComponent* SpawnMovementPlane(FTransform TransformForSpawn);
+
+	// UPROPERTY()
+	// TObjectPtr<UStaticMeshComponent> MoveStaticMeshComponent;
+	
+
+	UPROPERTY()
+	float movePlaneDuration = 2.0f;
+
+	UPROPERTY()
+	TArray<FTimerHandle> ActiveTimers;
+
+	UFUNCTION()
+	void AssignTileImageToMovePlane(int32 Index, UStaticMeshComponent* StaticMeshComponent);
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

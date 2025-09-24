@@ -65,7 +65,7 @@ void AGameBoard::BeginPlay()
 	{
 		GameStatePM->GameBoardSendBoardDimensionsDelegate.Broadcast(width, height);
 		GameStatePM->GameBoardPopulatedDelegate.Broadcast();
-		
+		StartTimer();
 	}
 }
 
@@ -371,11 +371,42 @@ void AGameBoard::SwitchTiles(int32 indexLeft, int32 indexRight)
 
 void AGameBoard::MoveTileRowsUpOneRow()
 {
-	for (int32 index = 0; index < TileComponent->TilePlanesComponent->BoardTiles.Num(); index++)
+
+	TArray<FTileStatus> TileStatusesCopy = TileComponent->TileInfoManagerComponent->TileStatuses;
+	int32 TotalTiles = TileComponent->TilePlanesComponent->BoardTiles.Num();
+
+	GameOverCheck(TotalTiles, TileStatusesCopy);
+
+	//move rows up. 
+	for (int32 i = TotalTiles -1; i >= width; i--)
 	{
-		int32 newIndex = index + width;
-		TileComponent->TileInfoManagerComponent->ChangeTileStatus(index,TileComponent->TileInfoManagerComponent->TileStatuses[index]);
-		TileComponent->TilePlanesComponent->ChangeTileImage(index, TileComponent->TileInfoManagerComponent->TileStatuses[index]);
+		TileComponent->TileInfoManagerComponent->ChangeTileStatus(i,TileStatusesCopy[i-width]);
+		TileComponent->TilePlanesComponent->ChangeTileImage(i, TileStatusesCopy[i-width]);
+	}
+
+	//clear bottom row
+	FTileStatus TileStatus;
+	TileStatus.TileInfo = TileComponent->TileInfoManagerComponent->GetTileInfo(GameplayTagEmptyTile);
+	for (int32 i = 0; i < width; i++)
+	{
+		TileComponent->TileInfoManagerComponent->ChangeTileStatus(i, TileStatus);
+		TileComponent->TilePlanesComponent->ChangeTileImage(i, TileStatus);
+	}
+}
+
+void AGameBoard::GameOverCheck(int32 TotalTiles, TArray<FTileStatus> TileStatusesCopy)
+{
+	int32 LastRowStartingIndex = TotalTiles - width;
+
+	for (int32 i = LastRowStartingIndex; i < TotalTiles; i++)
+	{
+		if (TileStatusesCopy[i].TileInfo && TileStatusesCopy[i].TileInfo->GameplayTag != GameplayTagEmptyTile)
+		{
+			GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Red, "Game Over");
+			UE_LOGFMT(LogTemp, Warning, "Game Over");
+			GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+			return;
+		}
 	}
 }
 
@@ -396,6 +427,18 @@ void AGameBoard::PopulateRow(int32 ColumnIndex, TArray<FGameplayTag> GameplayTag
 		TileComponent->TilePlanesComponent->ChangeTileImage(index, NewStatus);
 		tagindex++;
 	}
+}
+
+void AGameBoard::StartTimer()
+{
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AGameBoard::AddNewRowAtBottom, timeNewRowAdd, true);
+}
+
+void AGameBoard::AddNewRowAtBottom()
+{
+	MoveTileRowsUpOneRow();
+	TArray<FGameplayTag> NewRowGameplayTags = TileComponent->TilePopulatorComponent->GenerateTileLine();
+	PopulateRow(0, NewRowGameplayTags);
 }
 
 // UTileInfo* AGameBoard::GetTileInfo(FGameplayTag GameplayTag)

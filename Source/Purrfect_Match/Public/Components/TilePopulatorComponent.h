@@ -65,8 +65,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Board Reference")
 	TObjectPtr<AGameBoard> GameBoard = nullptr;
 
-	UFUNCTION(BlueprintCallable)
-	TArray<FGameplayTag> GenerateTileLine();
+	
 
 	UFUNCTION(BlueprintCallable)
 	FGameplayTag GenerateTileSingle();
@@ -74,7 +73,10 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	FGameplayTag GetTileTag(int32 tileIconNumber);
 
-public:	
+public:
+
+	UFUNCTION(BlueprintCallable)
+	TArray<FGameplayTag> GenerateTileLine();
 
 	UFUNCTION()
 	void PopulateBoardWithInitialTiles();
