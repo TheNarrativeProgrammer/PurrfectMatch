@@ -162,7 +162,7 @@ void UTileInfoManagerComponent::CheckTilesBelowAndMove()
 			{
 				if (UTilePlanesComponent* TilePlanesComponent = ActorOwner->GetComponentByClass<UTilePlanesComponent>())
 				{
-					TilePlanesComponent->MovePlaneDown(Index, LowestEmptyTile);
+					//TilePlanesComponent->MovePlaneDown(Index, LowestEmptyTile);
 				}
 			}
 			MoveTileDown(Index, LowestEmptyTile);
