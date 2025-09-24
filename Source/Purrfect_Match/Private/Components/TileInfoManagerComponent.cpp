@@ -15,6 +15,7 @@ UTileInfoManagerComponent::UTileInfoManagerComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 	bWantsInitializeComponent = true;
+	GameplayTagEmptyTile = FGameplayTag::RequestGameplayTag(FName("EmptyTile"));
 
 	// ...
 }
@@ -104,5 +105,93 @@ void UTileInfoManagerComponent::ChangeTileStatus(int32 IndexTile, FTileStatus Ne
 		return;
 	}
 	TileStatuses[IndexTile] = NewStatus;
+}
+
+bool UTileInfoManagerComponent::IsTileBelowIsEmpty(int32 IndexTile, int32& LowestEmptyTile)
+{
+	if (AActor* ActorOwner = Cast<AActor>(GetOwner()))
+	{
+		if (ActorOwner->Implements<UBoardable>())
+		{
+			int32 width = IBoardable::Execute_GetBoardWidth(ActorOwner);
+			if (IndexTile + width)
+			{
+				if (TileStatuses[IndexTile - width].TileInfo->GameplayTag == GameplayTagEmptyTile)
+				{
+					int32 indexOfLowestEmptyTile = IndexTile - width;
+					int32 multiplierIterator = 2;
+					
+					while (indexOfLowestEmptyTile >= 0)
+					{
+						if (TileStatuses.IsValidIndex(IndexTile - width * multiplierIterator) == false)
+						{
+							break;
+						}
+						if (TileStatuses[IndexTile - width * multiplierIterator].TileInfo->GameplayTag == GameplayTagEmptyTile)
+						{
+							multiplierIterator++;
+							indexOfLowestEmptyTile = indexOfLowestEmptyTile - (width * multiplierIterator) ;
+						}
+						else
+						{
+							break;
+						}
+					}
+					LowestEmptyTile = indexOfLowestEmptyTile;
+					return true;
+				}
+			}
+				
+		}
+	}
+	return false;
+	
+}
+
+void UTileInfoManagerComponent::CheckTilesBelowAndMove()
+{
+	for (int32 Index = 6; Index < TileStatuses.Num(); Index++)
+	{
+		if (TileStatuses[Index].TileInfo->GameplayTag == GameplayTagEmptyTile)
+		{
+			continue;
+		}
+
+		int32 LowestEmptyTile = INDEX_NONE;
+		if (IsTileBelowIsEmpty(Index, LowestEmptyTile))
+		{
+			MoveTileDown(Index, LowestEmptyTile);
+		}
+	}
+}
+
+void UTileInfoManagerComponent::MoveTileDown(int32 currentIndex, int32 NewIndex)
+{
+	if (AActor* ActorOwner = Cast<AActor>(GetOwner()))
+	{
+		if (UTileComponent* TileComponent = ActorOwner->GetComponentByClass<UTileComponent>())
+		{
+			FTileStatus NonEmptyStatus = TileComponent->TileInfoManagerComponent->TileStatuses[currentIndex];
+			FTileStatus EmptyStatus = TileComponent->TileInfoManagerComponent->TileStatuses[NewIndex];
+	
+			TileComponent->TileInfoManagerComponent->ChangeTileStatus(currentIndex, EmptyStatus);
+			TileComponent->TileInfoManagerComponent->ChangeTileStatus(NewIndex, NonEmptyStatus);
+
+			TileComponent->TilePlanesComponent->ChangeTileImage(currentIndex, EmptyStatus);
+			TileComponent->TilePlanesComponent->ChangeTileImage(NewIndex, NonEmptyStatus);
+
+			TileComponent->TileLineMatchProcessorComponent->CheckforLinesHorizontal();
+			TileComponent->TileLineMatchProcessorComponent->CheckforLinesVertical();
+			// CheckforLinesHorizontal();
+			// CheckforLinesVertical();
+
+			if (TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.IsEmpty() == false)
+			{
+				TileComponent->TileLineMatchProcessorComponent->ProcessMatches();
+			}
+		}
+	}
+	
+	
 }
 

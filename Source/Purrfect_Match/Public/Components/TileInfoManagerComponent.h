@@ -55,11 +55,27 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Board")
 	TArray<FTileStatus> TileStatuses;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Dimensions")
+	FGameplayTag GameplayTagEmptyTile;
+
 	UFUNCTION()
 	UTileInfo* GetTileInfo(FGameplayTag GameplayTag);
 
 	UFUNCTION()
 	void ChangeTileStatus(int32 IndexTile, FTileStatus NewStatus);
+
+	UFUNCTION()
+	bool IsTileBelowIsEmpty(int32 IndexTile, int32& LowestEmptyTile);
+
+	UFUNCTION()
+	void CheckTilesBelowAndMove();
+	
+	UFUNCTION()
+	void MoveTileDown(int32 currentIndex, int32 NewIndex);
+
+	
+
+	
 
 		
 };
