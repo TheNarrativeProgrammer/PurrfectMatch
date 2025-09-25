@@ -3,3 +3,7 @@
 
 #include "Core/GameStatePM.h"
 
+void AGameStatePM::SetLevelStage(TEnumAsByte<ELevelStage> LevelStage)
+{
+	CurrentLevelStage = LevelStage;
+}

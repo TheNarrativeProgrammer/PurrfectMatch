@@ -22,6 +22,21 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGameBoardSwitchTilesSignature, int
 //PlayerPawn
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPawnPlayerRequestTileLocationSignature, int32, leftIndex);
 
+UENUM(Blueprintable, BlueprintType)
+enum ELevelStage : uint8
+{
+	MAIN_MENU,
+	TUTORIAL_MENU,
+	LEVEL1_STORY,
+	LEVEL1_GAMEPLAY,
+	LEVEL2_STORY,
+	LEVEL2_GAMEPLAY,
+	LEVEL3_STORY,
+	LEVEL3_GAMEPLAY,
+	ENDING_STORY,
+	ENDING_CREDITS,
+};
+
 UCLASS()
 class PURRFECT_MATCH_API AGameStatePM : public AGameState
 {
@@ -43,5 +58,17 @@ public:
 
 	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "Gameboard Delegate")
 	FPawnPlayerRequestTileLocationSignature PawnPlayerRequestTileLocationDelegate;
+
+	UPROPERTY(BlueprintReadWrite, Blueprintable, Category = "Level Stages")
+	TEnumAsByte<ELevelStage> CurrentLevelStage;
+
+	UFUNCTION(BlueprintCallable, Category = "Level Stages")
+	void SetLevelStage(TEnumAsByte<ELevelStage> LevelStage);
+
+	UFUNCTION(BlueprintPure, Category = "Level Stages")
+	TEnumAsByte<ELevelStage> GetLevelStage() const {return CurrentLevelStage;}
+
+
+	
 	
 };
