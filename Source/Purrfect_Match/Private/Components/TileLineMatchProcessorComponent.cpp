@@ -97,6 +97,7 @@ void UTileLineMatchProcessorComponent::CheckforLinesHorizontal()
 
 					TArray<int32> indexOfPossibledMatches;
 					indexOfPossibledMatches.Add(rowIndexLeft);
+					FGameplayTag tagMatchStart;
 
 					//Check matches in the row. Exit loop at end of row
 					while (rowIndexRight < rowIndexStart + IBoardable::Execute_GetBoardWidth(ActorOwner))
@@ -104,6 +105,7 @@ void UTileLineMatchProcessorComponent::CheckforLinesHorizontal()
 						const FGameplayTag tagLeft = TileComponent->TileInfoManagerComponent->TileStatuses[rowIndexLeft].TileInfo->GameplayTag;
 						const FGameplayTag tagRight = TileComponent->TileInfoManagerComponent->TileStatuses[rowIndexRight].TileInfo->GameplayTag;
 						const FGameplayTag emptyTag = FGameplayTag::RequestGameplayTag(FName("EmptyTile"));
+						tagMatchStart = tagLeft;
 
 						if (tagLeft == tagRight && tagLeft != emptyTag)
 						{
@@ -114,15 +116,10 @@ void UTileLineMatchProcessorComponent::CheckforLinesHorizontal()
 						{
 							if (countMatchingTiles >= ScoreComponent->minimumMatchingForPoint)
 							{
-								FMatchGroup MatchGroup;
-								MatchGroup.indices = indexOfPossibledMatches;
-								TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.Add(MatchGroup);
-								pointsScored += countMatchingTiles * ScoreComponent->pointsPerMatch;
+								ProcessMatchGroup(pointsScored, tagMatchStart, indexOfPossibledMatches, TileComponent, ScoreComponent, countMatchingTiles);
 							}
-							countMatchingTiles = 1;
-							rowIndexLeft = rowIndexRight;
-							indexOfPossibledMatches.Empty();
-							indexOfPossibledMatches.Add(rowIndexLeft);
+
+							ResetCountIndexAndArray(countMatchingTiles, rowIndexLeft, rowIndexRight, indexOfPossibledMatches);
 						}
 						rowIndexRight++;
 					}
@@ -130,17 +127,13 @@ void UTileLineMatchProcessorComponent::CheckforLinesHorizontal()
 					//At end of row, check matching tile count
 					if (countMatchingTiles >= ScoreComponent->minimumMatchingForPoint)
 					{
-						FMatchGroup MatchGroup;
-						MatchGroup.indices = indexOfPossibledMatches;
-						TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.Add(MatchGroup);
-						pointsScored += countMatchingTiles * ScoreComponent->pointsPerMatch;
+						ProcessMatchGroup(pointsScored, tagMatchStart, indexOfPossibledMatches, TileComponent, ScoreComponent, countMatchingTiles);
 					}
 				}
 				ScoreComponent->UpdateScore(pointsScored);
 			}
 		}
 	}
-	
 }
 
 bool UTileLineMatchProcessorComponent::IsLineEmptyRow(int32 rowStartIndex)
@@ -191,6 +184,7 @@ void UTileLineMatchProcessorComponent::CheckforLinesVertical()
 
 					TArray<int32> indexOfPossibledMatches;
 					indexOfPossibledMatches.Add(columnIndexBottom);
+					FGameplayTag tagMatchStart;
 					
 					while (columnIndexUp < TileComponent->TileInfoManagerComponent->TileStatuses.Num() )
 					{
@@ -202,6 +196,7 @@ void UTileLineMatchProcessorComponent::CheckforLinesVertical()
 						FGameplayTag tagBottom = TileComponent->TileInfoManagerComponent->TileStatuses[columnIndexBottom].TileInfo->GameplayTag;
 						FGameplayTag tagUp = TileComponent->TileInfoManagerComponent->TileStatuses[columnIndexUp].TileInfo->GameplayTag;
 						FGameplayTag emptyTag = FGameplayTag::RequestGameplayTag("EmptyTile");
+						tagMatchStart = tagBottom;
 						
 						if (tagBottom != emptyTag && tagUp == tagBottom)
 						{
@@ -212,25 +207,16 @@ void UTileLineMatchProcessorComponent::CheckforLinesVertical()
 						{
 							if (countMatchingTiles >= ScoreComponent->minimumMatchingForPoint)
 							{
-								FMatchGroup MatchGroup;
-								MatchGroup.indices = indexOfPossibledMatches;
-								TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.Add(MatchGroup);
-								pointsScored += countMatchingTiles * ScoreComponent->pointsPerMatch;
+								ProcessMatchGroup(pointsScored, tagMatchStart, indexOfPossibledMatches, TileComponent, ScoreComponent, countMatchingTiles);
 							}
-							indexOfPossibledMatches.Empty();
-							countMatchingTiles = 1;
-							columnIndexBottom = columnIndexUp;
-							indexOfPossibledMatches.Add(columnIndexBottom);
+							ResetCountIndexAndArray(countMatchingTiles, columnIndexBottom, columnIndexUp, indexOfPossibledMatches);
 						}
 						columnIndexUp += IBoardable::Execute_GetBoardWidth(ActorOwner);
 					}
 					//At end of row, check matching tile count
 					if (countMatchingTiles >= ScoreComponent->minimumMatchingForPoint)
 					{
-						FMatchGroup MatchGroup;
-						MatchGroup.indices = indexOfPossibledMatches;
-						TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.Add(MatchGroup);
-						pointsScored += countMatchingTiles * ScoreComponent->pointsPerMatch;
+						ProcessMatchGroup(pointsScored, tagMatchStart, indexOfPossibledMatches, TileComponent, ScoreComponent, countMatchingTiles);
 					}
 				}
 				ScoreComponent->UpdateScore(pointsScored);
@@ -238,7 +224,6 @@ void UTileLineMatchProcessorComponent::CheckforLinesVertical()
 		}
 	}
 	
-	GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Red, FString::Printf(TEXT("Scored: %d"), pointsScored));
 }
 
 bool UTileLineMatchProcessorComponent::IsLineEmptyColumn(int32 columnStartIndex)
@@ -265,6 +250,32 @@ bool UTileLineMatchProcessorComponent::IsLineEmptyColumn(int32 columnStartIndex)
 		}
 	}
 	return true;
+}
+
+void UTileLineMatchProcessorComponent::ProcessMatchGroup(int& PointsScored, FGameplayTag TagLeft, TArray<int32> indexOfPossibledMatches, UTileComponent* TileComponent, UScoreComponent* ScoreComponent, int CountMatchingTiles)
+{
+	FMatchGroup MatchGroup;
+	MatchGroup.indices = indexOfPossibledMatches;
+	if (TagLeft.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Affection"))))
+	{
+		MatchGroup.GameplayTagGoalOrAffection = FGameplayTag::RequestGameplayTag(FName("Affection"));
+	}
+	else
+	{
+		MatchGroup.GameplayTagGoalOrAffection = FGameplayTag::RequestGameplayTag(FName("Goal"));
+	}
+								
+	TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.Add(MatchGroup);
+	PointsScored += CountMatchingTiles * ScoreComponent->pointsPerMatch;
+}
+
+void UTileLineMatchProcessorComponent::ResetCountIndexAndArray(int32& CountMatchingTiles,
+	int32& SlidingWindowStartIndex, int32 NewWindowStartIndex, TArray<int32>& IndexOfPossibledMatches)
+{
+	CountMatchingTiles = 1;
+	SlidingWindowStartIndex = NewWindowStartIndex;
+	IndexOfPossibledMatches.Empty();
+	IndexOfPossibledMatches.Add(SlidingWindowStartIndex);
 }
 
 

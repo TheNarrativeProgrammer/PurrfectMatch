@@ -14,6 +14,9 @@ struct FMatchGroup
 
 	UPROPERTY(BlueprintReadWrite)
 	TArray<int32> indices;
+
+	UPROPERTY(BlueprintReadWrite)
+	FGameplayTag GameplayTagGoalOrAffection;
 };
 
 class UTileComponent;
@@ -47,6 +50,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool IsLineEmptyColumn(int32 columnStartIndex);
 
+	UFUNCTION(BlueprintCallable)
+	void ProcessMatchGroup(int& PointsScored, FGameplayTag TagLeft, TArray<int32> indexOfPossibledMatches, UTileComponent* TileComponent, UScoreComponent* ScoreComponent, int CountMatchingTiles);
+
+	UFUNCTION(BlueprintCallable)
+	void ResetCountIndexAndArray(int32& CountMatchingTiles, int32& SlidingWindowStartIndex, int32 NewWindowStartIndex, TArray<int32>& IndexOfPossibledMatches);
 
 protected:
 	// Called when the game starts
