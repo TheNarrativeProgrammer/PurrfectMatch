@@ -13,5 +13,25 @@ UCLASS()
 class PURRFECT_MATCH_API APlayerStatePM : public APlayerState
 {
 	GENERATED_BODY()
+
+public:
+	APlayerStatePM();
+
+
+public:
+	
+	UFUNCTION(BlueprintCallable, Category = "Score")
+	void IncreaseScore(float ScoreIncrumentAmount);
+
+	UFUNCTION(BlueprintCallable, Category = "Score")
+	void DecreaseScore(float ScoreDecrumentAmount);
+
 	
 };
+
+
+
+
+
+
+

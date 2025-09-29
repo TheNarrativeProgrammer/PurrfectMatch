@@ -3,6 +3,9 @@
 
 #include "Components/ScoreComponent.h"
 
+#include "Core/PlayerStatePM.h"
+#include "Kismet/GameplayStatics.h"
+
 // Sets default values for this component's properties
 UScoreComponent::UScoreComponent()
 {
@@ -16,8 +19,16 @@ UScoreComponent::UScoreComponent()
 
 void UScoreComponent::UpdateScore(int32 pointsScored)
 {
-	score += pointsScored;
-	GEngine->AddOnScreenDebugMessage(3, 5.0f, FColor::Green, FString::Printf(TEXT("Scored: %d"), score));
+	
+	if (APlayerState* PlayerState = UGameplayStatics::GetPlayerState(GetWorld(), 0))
+	{
+		if (APlayerStatePM* PlayerStatePM = Cast<APlayerStatePM>(PlayerState))
+		{
+			PlayerStatePM->IncreaseScore(pointsScored);
+		}
+	}
+	// score += pointsScored;
+	// GEngine->AddOnScreenDebugMessage(3, 5.0f, FColor::Green, FString::Printf(TEXT("Scored: %d"), score));
 }
 
 // Called when the game starts

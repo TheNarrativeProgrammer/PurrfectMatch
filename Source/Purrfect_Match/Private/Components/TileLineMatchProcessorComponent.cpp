@@ -6,8 +6,11 @@
 #include "Components/ScoreComponent.h"
 #include "Components/TileComponent.h"
 #include "Components/TilePlanesComponent.h"
+#include "Core/PlayerStatePM.h"
 #include "Data/TileStatus.h"
 #include "GameBoard/GameBoard.h"
+#include "GameFramework/PlayerState.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values for this component's properties
 UTileLineMatchProcessorComponent::UTileLineMatchProcessorComponent()
@@ -133,12 +136,10 @@ void UTileLineMatchProcessorComponent::CheckforLinesHorizontal()
 						pointsScored += countMatchingTiles * ScoreComponent->pointsPerMatch;
 					}
 				}
-				
 				ScoreComponent->UpdateScore(pointsScored);
 			}
 		}
 	}
-	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, FString::Printf(TEXT("Scored: %d"), pointsScored));
 	
 }
 
