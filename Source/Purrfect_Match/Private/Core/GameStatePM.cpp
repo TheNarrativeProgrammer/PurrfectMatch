@@ -3,12 +3,20 @@
 
 #include "Core/GameStatePM.h"
 
-void AGameStatePM::SetLevelStage(TEnumAsByte<ELevelStage> LevelStage)
+void AGameStatePM::BeginPlay()
 {
-	CurrentLevelStage = LevelStage;
+	Super::BeginPlay();
 }
+
+
 
 void AGameStatePM::HandleRestartingLevel()
 {
-	GameStateLiveLostRestartLevelDelegate.Broadcast();
+	GameStateRestartLevelDelegate.Broadcast();
+}
+
+void AGameStatePM::HandleMatchHasEnded()
+{
+	Super::HandleMatchHasEnded();
+	GameStateMatchEndDelegate.Broadcast();
 }

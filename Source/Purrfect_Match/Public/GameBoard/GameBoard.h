@@ -64,6 +64,13 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
+	void SpawnPlane(int x, int y);
+
+	UFUNCTION()
+	void UpdateTileInfoAndPlaneImage(int32 index, FGameplayTag Gameplaytag);
+	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Delegate binding component")
 	TObjectPtr<UDelegateBindingCompGameBoard> DelegateBindingCompGameBoard;
 
@@ -127,6 +134,7 @@ protected:
 
 	// UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Board")
 	// UStaticMesh* PlaneMesh;
+	
 
 	UFUNCTION(BlueprintCallable)
 	int32 GetIndexOfArray(int32 xValue, int32 yValue);
@@ -161,7 +169,17 @@ protected:
 
 	
 
-public:	
+public:
+
+	UFUNCTION(BlueprintCallable)
+	void OnLevelRestarted();
+
+	UFUNCTION(BlueprintCallable)
+	void ClearBoardData();
+
+	UFUNCTION(BlueprintCallable)
+	void PopulateBoard();
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
@@ -173,7 +191,13 @@ public:
 	void SwitchTiles(int32 indexLeft, int32 indexRight);
 
 	UFUNCTION()
+	void ProcessSwitch(int32 IndexCurrent, FTileStatus DestinationStatus);
+
+	UFUNCTION()
 	void MoveTileRowsUpOneRow();
+
+	UFUNCTION()
+	void ProcessMatches();
 
 	UFUNCTION()
 	void GameOverCheck(int32 TotalTiles, TArray<FTileStatus> TileStatusesCopy);

@@ -5,6 +5,7 @@
 
 #include "NaniteSceneProxy.h"
 #include "Components/TileInfoManagerComponent.h"
+#include "GameBoard/GameBoard.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values for this component's properties
@@ -61,7 +62,7 @@ void UTilePlanesComponent::ChangeTileImage(int32 IndexTile, FTileStatus NewStatu
 	BoardTiles[IndexTile]->SetMaterial(0, NewStatus.TileInfo->Material);
 }
 
-void UTilePlanesComponent::MovePlaneDown(int32 IndexCurrent, int32 IndexDestination)
+void UTilePlanesComponent::SpawnPlaneAndMove(int32 IndexCurrent, int32 IndexDestination, FTileStatus DestinationStatus)
 {
 	if (BoardTiles.IsValidIndex(IndexCurrent) == false && BoardTiles.IsValidIndex(IndexDestination) == false)
 	{
@@ -88,9 +89,10 @@ void UTilePlanesComponent::MovePlaneDown(int32 IndexCurrent, int32 IndexDestinat
 		false, false, movePlaneDuration, false, EMoveComponentAction::Move, LatentInfoDestination);
 
 	DestroyMovePlane(MoveStaticMeshComponent, movePlaneDuration + 0.1f);
-
-	
+	OnMoveCompleteProcessSwitch(IndexCurrent, DestinationStatus, movePlaneDuration + 0.1f);
 }
+
+
 
 void UTilePlanesComponent::SwitchPlanes(int32 indexLeft, int32 indexRight)
 {
@@ -137,17 +139,39 @@ void UTilePlanesComponent::DestroyMovePlane(UStaticMeshComponent* StaticMeshComp
     
 	GetWorld()->GetTimerManager().SetTimer(
 		TimerHandle,
-		[this, StaticMeshComponent]()
+		[this, StaticMeshComponent, TimerHandle]()
 		{
 			if (StaticMeshComponent)
 			{
 				StaticMeshComponent->DestroyComponent();
+				ActiveTimers.Remove(TimerHandle);
 			}
 		},
 		DestroyAfterDuration,  // Delay per component
 		false  // Do not loop
 	);
 	
+	ActiveTimers.Add(TimerHandle);
+}
+
+void UTilePlanesComponent::OnMoveCompleteProcessSwitch(int32 IndexCurrent, FTileStatus DestinationStatus, float ProcessAfterDuration)
+{
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(
+		TimerHandle,
+		[this, IndexCurrent, DestinationStatus, TimerHandle]()
+		{
+			if (AActor* ActorOwner = GetOwner())
+			{
+				if (AGameBoard* GameBoard = Cast<AGameBoard>(ActorOwner))
+				{
+					GameBoard->ProcessSwitch(IndexCurrent, DestinationStatus);
+					ActiveTimers.Remove(TimerHandle);
+				}
+			}
+		},
+			ProcessAfterDuration, false
+	);
 	ActiveTimers.Add(TimerHandle);
 }
 

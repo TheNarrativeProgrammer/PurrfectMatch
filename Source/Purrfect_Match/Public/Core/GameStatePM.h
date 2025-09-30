@@ -28,29 +28,19 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FPlayerStateScoreChangeSignature,
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FPlayerStateLiveChangeSignature, int32, oldLives, int32, newLives, int32, livesChange);
 
 //GameState - Match states
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGameStateLiveLostRestartLevelSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGameStateRestartLevelSignature);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGameStateMatchEndSignature);
 
 
-UENUM(Blueprintable, BlueprintType)
-enum ELevelStage : uint8
-{
-	MAIN_MENU,
-	TUTORIAL_MENU,
-	LEVEL1_STORY,
-	LEVEL1_GAMEPLAY,
-	LEVEL2_STORY,
-	LEVEL2_GAMEPLAY,
-	LEVEL3_STORY,
-	LEVEL3_GAMEPLAY,
-	ENDING_STORY,
-	ENDING_CREDITS,
-};
+
 
 UCLASS()
 class PURRFECT_MATCH_API AGameStatePM : public AGameState
 {
 	GENERATED_BODY()
 public:
+	virtual void BeginPlay() override;
 	//gameboard
 	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "Gameboard Delegate")
 	FGameBoardPopulatedSiganature GameBoardPopulatedDelegate;
@@ -78,19 +68,22 @@ public:
 
 	//Game State - match state
 	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "GameState Delegate")
-	FGameStateLiveLostRestartLevelSignature GameStateLiveLostRestartLevelDelegate;
+	FGameStateRestartLevelSignature GameStateRestartLevelDelegate;
 
-	UPROPERTY(BlueprintReadWrite, Blueprintable, Category = "Level Stages")
-	TEnumAsByte<ELevelStage> CurrentLevelStage;
+	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "GameState Delegate")
+	FGameStateMatchEndSignature GameStateMatchEndDelegate;
 
-	UFUNCTION(BlueprintCallable, Category = "Level Stages")
-	void SetLevelStage(TEnumAsByte<ELevelStage> LevelStage);
+	
+	
 
-	UFUNCTION(BlueprintPure, Category = "Level Stages")
-	TEnumAsByte<ELevelStage> GetLevelStage() const {return CurrentLevelStage;}
+	
 
 	UFUNCTION(BlueprintCallable, Category = "Match State")
 	void HandleRestartingLevel();
+
+	virtual void HandleMatchHasEnded() override;
+	
+	
 
 
 	

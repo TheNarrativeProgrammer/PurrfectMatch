@@ -11,6 +11,7 @@
 #include "Components/TilePlanesComponent.h"
 #include "Components/ScoreComponent.h"
 #include "Core/PlayerStatePM.h"
+#include "GameFramework/GameMode.h"
 #include "Kismet/GameplayStatics.h"
 #include "Logging/StructuredLog.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -54,12 +55,8 @@ void AGameBoard::BeginPlay()
 		for (int x = 0; x < width; x++)
 		{
 			int32 index = GetIndexOfArray(x, y);
-			FVector PlaneSpawnLocation = GetTileLocationByXandY(x, y);
-			TileComponent->TilePlanesComponent->SpawnPlaneAtLocation(PlaneSpawnLocation);
-			FGameplayTag GameBoardGameTag = FGameplayTag::RequestGameplayTag(FName("EmptyTile"));
-			TileComponent->TileInfoManagerComponent->TileStatuses[index].TileInfo = TileComponent->TileInfoManagerComponent->GetTileInfo(GameBoardGameTag);
-			TileComponent->TileInfoManagerComponent->ChangeTileStatus(index, TileComponent->TileInfoManagerComponent->TileStatuses[index]);
-			TileComponent->TilePlanesComponent->ChangeTileImage(index, TileComponent->TileInfoManagerComponent->TileStatuses[index]);
+			SpawnPlane(x, y);
+			UpdateTileInfoAndPlaneImage(index, GameplayTagEmptyTile);
 		}
 	}
 
@@ -68,7 +65,21 @@ void AGameBoard::BeginPlay()
 		GameStatePM->GameBoardSendBoardDimensionsDelegate.Broadcast(width, height);
 		GameStatePM->GameBoardPopulatedDelegate.Broadcast();
 		StartTimer();
+		ProcessMatches();
 	}
+}
+
+void AGameBoard::SpawnPlane(int x, int y)
+{
+	FVector PlaneSpawnLocation = GetTileLocationByXandY(x, y);
+	TileComponent->TilePlanesComponent->SpawnPlaneAtLocation(PlaneSpawnLocation);
+}
+
+void AGameBoard::UpdateTileInfoAndPlaneImage(int32 index, FGameplayTag Gameplaytag)
+{
+	TileComponent->TileInfoManagerComponent->TileStatuses[index].TileInfo = TileComponent->TileInfoManagerComponent->GetTileInfo(Gameplaytag);
+	TileComponent->TileInfoManagerComponent->ChangeTileStatus(index, TileComponent->TileInfoManagerComponent->TileStatuses[index]);
+	TileComponent->TilePlanesComponent->ChangeTileImage(index, TileComponent->TileInfoManagerComponent->TileStatuses[index]);
 }
 
 int32 AGameBoard::GetIndexOfArray(int32 xValue, int32 yValue)
@@ -84,229 +95,32 @@ FVector AGameBoard::GetTileLocationByXandY(int32 xValue, int32 yValue)
 	return FVector(x, 0.0f, z);
 }
 
-// FVector AGameBoard::GetTileLocationByArrayIndex(int32 index)
-// {
-// 	if (BoardTiles.IsValidIndex(index))
-// 	{
-// 		return BoardTiles[index]->GetComponentLocation();
-// 	}
-// 	return BoardTiles[0]->GetComponentLocation();
-// }
+void AGameBoard::OnLevelRestarted()
+{
+	ClearBoardData();
+	PopulateBoard();
+}
 
-// void AGameBoard::SpawnPlaneAtLocation(FVector PlaneSpawnLocation)
-// {
-// 	FTransform PlaneSpawnTransform;
-// 	PlaneSpawnTransform.SetLocation(PlaneSpawnLocation);
-// 	
-// 	UActorComponent* ActorComponent = AddComponentByClass(UStaticMeshComponent::StaticClass(), false, PlaneSpawnTransform, false);
-//
-// 	if (UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(ActorComponent))
-// 	{
-// 		FRotator Rotator = FRotator(0.0f, 00.0f, -90.0f);
-// 		StaticMeshComponent->SetWorldRotation(Rotator);
-// 		if (PlaneMesh)
-// 		{
-// 			StaticMeshComponent->SetStaticMesh(PlaneMesh);
-// 		}
-// 		StaticMeshComponent->RegisterComponent();
-// 		if (BoardTileMaterial)
-// 		{
-// 			StaticMeshComponent->SetMaterial(0, BoardTileMaterial);
-// 		}
-// 		BoardTiles.AddUnique(StaticMeshComponent);
-// 		StaticMeshComponent->SetupAttachment(GetRootComponent());
-// 		
-// 	}
-// }
+void AGameBoard::ClearBoardData()
+{
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			int32 index = GetIndexOfArray(x, y);
+			UpdateTileInfoAndPlaneImage(index, GameplayTagEmptyTile);
+		}
+	}
+}
 
-// void AGameBoard::CheckforLinesHorizontal()
-// {
-// 	int32 pointsScored = 0;
-//
-// 	//Start match at beginning of row
-// 	for (int row = 0; row < height; row++)
-// 	{
-// 		int32 rowIndexStart = row * width;
-//
-// 		//If the first tile is empty, check if the remaining row is empty.
-// 		if (TileComponent->TileInfoManagerComponent->TileStatuses[rowIndexStart].TileInfo->GameplayTag == FGameplayTag::RequestGameplayTag("EmptyTile"))
-// 		{
-// 			if (IsLineEmptyRow(rowIndexStart))
-// 			{
-// 				continue;
-// 			}
-// 		}
-// 		
-// 		int32 countMatchingTiles = 1;
-// 		//Set ptr for window. Left is at the beginning of the row and right is 1 index after.
-// 		int32 rowIndexLeft = rowIndexStart;
-// 		int32 rowIndexRight = rowIndexLeft + 1;
-//
-// 		TArray<int32> indexOfPossibledMatches;
-// 		indexOfPossibledMatches.Add(rowIndexLeft);
-//
-// 		//Check matches in the row. Exit loop at end of row
-// 		while (rowIndexRight < rowIndexStart + width)
-// 		{
-// 			const FGameplayTag tagLeft = TileComponent->TileInfoManagerComponent->TileStatuses[rowIndexLeft].TileInfo->GameplayTag;
-// 			const FGameplayTag tagRight = TileComponent->TileInfoManagerComponent->TileStatuses[rowIndexRight].TileInfo->GameplayTag;
-// 			const FGameplayTag emptyTag = FGameplayTag::RequestGameplayTag(FName("EmptyTile"));
-//
-// 			if (tagLeft == tagRight && tagLeft != emptyTag)
-// 			{
-// 				countMatchingTiles++;
-// 				indexOfPossibledMatches.Add(rowIndexRight);
-// 			}
-// 			else
-// 			{
-// 				if (countMatchingTiles >= ScoreComponent->minimumMatchingForPoint)
-// 				{
-// 					FMatchGroup MatchGroup;
-// 					MatchGroup.indices = indexOfPossibledMatches;
-// 					TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.Add(MatchGroup);
-// 					pointsScored += countMatchingTiles * ScoreComponent->pointsPerMatch;
-// 				}
-// 				countMatchingTiles = 1;
-// 				rowIndexLeft = rowIndexRight;
-// 				indexOfPossibledMatches.Empty();
-// 				indexOfPossibledMatches.Add(rowIndexLeft);
-// 			}
-// 			rowIndexRight++;
-// 		}
-//
-// 		//At end of row, check matching tile count
-// 		if (countMatchingTiles >= ScoreComponent->minimumMatchingForPoint)
-// 		{
-// 			FMatchGroup MatchGroup;
-// 			MatchGroup.indices = indexOfPossibledMatches;
-// 			TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.Add(MatchGroup);
-// 			pointsScored += countMatchingTiles * ScoreComponent->pointsPerMatch;
-// 		}
-// 	}
-// 	ScoreComponent->UpdateScore(pointsScored);
-// 	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, FString::Printf(TEXT("Scored: %d"), pointsScored));
-// }
-
-// bool AGameBoard::IsLineEmptyRow(int32 rowStartIndex)
-// {
-// 	for (int32 offset = 0; offset < width; offset++)
-// 	{
-// 		int32 index = rowStartIndex + offset;
-// 		
-// 		if (TileComponent->TileInfoManagerComponent->TileStatuses.IsValidIndex(index) == false)
-// 		{
-// 			return true;
-// 		}
-//
-// 		if (TileComponent->TileInfoManagerComponent->TileStatuses[index].TileInfo->GameplayTag != FGameplayTag::RequestGameplayTag(FName("EmptyTile")))
-// 		{
-// 			return false;
-// 		}
-// 	}
-// 	return true;
-// }
-
-// void AGameBoard::CheckforLinesVertical()
-// {
-// 	int32 pointsScored = 0;
-// 	
-// 	for (int32 col = 0; col < width; col++)
-// 	{
-// 		int32 columnIndexBottom = col;
-// 		int32 columnIndexUp = columnIndexBottom + width;
-// 		int32 countMatchingTiles = 1;
-//
-// 		if (TileComponent->TileInfoManagerComponent->TileStatuses[columnIndexBottom].TileInfo->GameplayTag == FGameplayTag::RequestGameplayTag("EmptyTile"))
-// 		{
-// 			if (IsLineEmptyColumn(columnIndexBottom))continue;
-// 		}
-//
-// 		TArray<int32> indexOfPossibledMatches;
-// 		indexOfPossibledMatches.Add(columnIndexBottom);
-// 		
-// 		while (columnIndexUp < TileComponent->TileInfoManagerComponent->TileStatuses.Num() )
-// 		{
-// 			
-// 			if (TileComponent->TileInfoManagerComponent->TileStatuses.IsValidIndex(columnIndexUp) == false)
-// 			{
-// 				break;
-// 			}
-// 			FGameplayTag tagBottom = TileComponent->TileInfoManagerComponent->TileStatuses[columnIndexBottom].TileInfo->GameplayTag;
-// 			FGameplayTag tagUp = TileComponent->TileInfoManagerComponent->TileStatuses[columnIndexUp].TileInfo->GameplayTag;
-// 			FGameplayTag emptyTag = FGameplayTag::RequestGameplayTag("EmptyTile");
-// 			
-// 			if (tagBottom != emptyTag && tagUp == tagBottom)
-// 			{
-// 				indexOfPossibledMatches.Add(columnIndexUp);
-// 				countMatchingTiles++;
-// 			}
-// 			else
-// 			{
-// 				if (countMatchingTiles >= ScoreComponent->minimumMatchingForPoint)
-// 				{
-// 					FMatchGroup MatchGroup;
-// 					MatchGroup.indices = indexOfPossibledMatches;
-// 					TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.Add(MatchGroup);
-// 					pointsScored += countMatchingTiles * ScoreComponent->pointsPerMatch;
-// 				}
-// 				indexOfPossibledMatches.Empty();
-// 				countMatchingTiles = 1;
-// 				columnIndexBottom = columnIndexUp;
-// 				indexOfPossibledMatches.Add(columnIndexBottom);
-// 			}
-// 			columnIndexUp += width;
-// 		}
-// 		//At end of row, check matching tile count
-// 		if (countMatchingTiles >= ScoreComponent->minimumMatchingForPoint)
-// 		{
-// 			FMatchGroup MatchGroup;
-// 			MatchGroup.indices = indexOfPossibledMatches;
-// 			TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.Add(MatchGroup);
-// 			pointsScored += countMatchingTiles * ScoreComponent->pointsPerMatch;
-// 		}
-// 	}
-// 	ScoreComponent->UpdateScore(pointsScored);
-// 	GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Red, FString::Printf(TEXT("Scored: %d"), pointsScored));
-// }
-
-// bool AGameBoard::IsLineEmptyColumn(int32 columnStartIndex)
-// {
-// 	for (int32 row = 0; row < height; row++)
-// 	{
-// 		int32 index = columnStartIndex + (row * width);
-// 		
-// 		if (TileComponent->TileInfoManagerComponent->TileStatuses.IsValidIndex(index) == false)
-// 		{
-// 			return true;
-// 		}
-//
-// 		if (TileComponent->TileInfoManagerComponent->TileStatuses[index].TileInfo->GameplayTag != FGameplayTag::RequestGameplayTag("EmptyTile"))
-// 		{
-// 			return false;
-// 		}
-// 	}
-// 	return true;
-// }
-
-// void AGameBoard::ProcessMatches()
-// {
-// 	if (TileLineMatchProcessorComponent->indexOfMatchedTiles.IsEmpty())
-// 	{
-// 		return;
-// 	}
-// 	
-// 	for (int32 i = 0; i <  indexOfMatchedTiles.Num(); i++)
-// 	{
-// 		for (int32 j = 0; j < indexOfMatchedTiles[i].indices.Num(); j++)
-// 		{
-// 			FTileStatus NewTileStatus;
-// 			NewTileStatus.TileInfo = GetTileInfo(GameplayTagEmptyTile);
-// 			ChangeTileStatus(indexOfMatchedTiles[i].indices[j], NewTileStatus);
-// 		}
-// 	}
-//
-// 	 indexOfMatchedTiles.Empty();
-// }
+void AGameBoard::PopulateBoard()
+{
+	if (AGameStatePM* GameStatePM = Cast<AGameStatePM>(GetWorld()->GetGameState()))
+	{
+		GameStatePM->GameBoardPopulatedDelegate.Broadcast();
+		StartTimer();
+	}
+}
 
 
 // Called every frame
@@ -316,29 +130,20 @@ void AGameBoard::Tick(float DeltaTime)
 
 }
 
-// void AGameBoard::ChangeTileStatus(int32 IndexTile, FTileStatus NewStatus)
-// {
-// 	if (NewStatus.TileInfo == nullptr)
-// 	{
-// 		UE_LOGFMT(LogTemp, Warning, "Missing empty DA in the TileInfo Component. TileInfo withing TileStatus is nullptr for empty tiles");
-// 		return;
-// 	}
-// 	TileStatuses[IndexTile] = NewStatus;
-// 	BoardTiles[IndexTile]->SetMaterial(0, NewStatus.TileInfo->Material);
-// }
+
 
 void AGameBoard::SwitchTiles(int32 indexLeft, int32 indexRight)
 {
 
-	// const FTransform TransformRight = BoardTiles[indexRight]->GetRelativeTransform();
-	// const FTransform TransformLeft = BoardTiles[indexLeft]->GetRelativeTransform();
+	// const FTransform TransformRight = TileComponent->TilePlanesComponent->BoardTiles[indexRight]->GetRelativeTransform();
+	// const FTransform TransformLeft = TileComponent->TilePlanesComponent->BoardTiles[indexLeft]->GetRelativeTransform();
 	// FLatentActionInfo LatentInfoRight;
 	// LatentInfoRight.CallbackTarget = this;
 	// LatentInfoRight.UUID = __LINE__;
 	// LatentInfoRight.Linkage = 0;
 	// LatentInfoRight.ExecutionFunction = NAME_None;
 	//
-	// UKismetSystemLibrary::MoveComponentTo(BoardTiles[indexLeft],TransformRight.GetLocation(), TransformRight.Rotator(),
+	// UKismetSystemLibrary::MoveComponentTo(TileComponent->TilePlanesComponent->BoardTiles[indexLeft],TransformRight.GetLocation(), TransformRight.Rotator(),
 	// 	false, false, 1.0f, false, EMoveComponentAction::Move, LatentInfoRight);
 	//
 	// FLatentActionInfo LatentInfoLeft;
@@ -347,28 +152,42 @@ void AGameBoard::SwitchTiles(int32 indexLeft, int32 indexRight)
 	// LatentInfoLeft.Linkage = 0;
 	// LatentInfoLeft.ExecutionFunction = NAME_None;
 	//
-	// UKismetSystemLibrary::MoveComponentTo(BoardTiles[indexRight],TransformLeft.GetLocation(), TransformLeft.Rotator(),
+	// UKismetSystemLibrary::MoveComponentTo(TileComponent->TilePlanesComponent->BoardTiles[indexRight],TransformLeft.GetLocation(), TransformLeft.Rotator(),
 	// 	false, false, 1.0f, false, EMoveComponentAction::Move, LatentInfoLeft);
-	
-	FTileStatus LeftStatus = TileComponent->TileInfoManagerComponent->TileStatuses[indexLeft];
+
 	FTileStatus RightStatus = TileComponent->TileInfoManagerComponent->TileStatuses[indexRight];
+	FTileStatus LeftStatus = TileComponent->TileInfoManagerComponent->TileStatuses[indexLeft];
+
+	TileComponent->TilePlanesComponent->SpawnPlaneAndMove(indexLeft, indexRight, RightStatus);
+
 	
-	TileComponent->TileInfoManagerComponent->ChangeTileStatus(indexLeft, RightStatus);
-	TileComponent->TileInfoManagerComponent->ChangeTileStatus(indexRight, LeftStatus);
+	TileComponent->TilePlanesComponent->SpawnPlaneAndMove(indexRight, indexLeft, LeftStatus);
 
-	TileComponent->TilePlanesComponent->ChangeTileImage(indexLeft, RightStatus);
-	TileComponent->TilePlanesComponent->ChangeTileImage(indexRight, LeftStatus);
+	// FTileStatus LeftStatus = TileComponent->TileInfoManagerComponent->TileStatuses[indexLeft];
+	// FTileStatus RightStatus = TileComponent->TileInfoManagerComponent->TileStatuses[indexRight];
+	//
+	// TileComponent->TileInfoManagerComponent->ChangeTileStatus(indexLeft, RightStatus);
+	// TileComponent->TileInfoManagerComponent->ChangeTileStatus(indexRight, LeftStatus);
+	//
+	// TileComponent->TilePlanesComponent->ChangeTileImage(indexLeft, RightStatus);
+	// TileComponent->TilePlanesComponent->ChangeTileImage(indexRight, LeftStatus);
+	//
+	// ProcessMatches();
+	// TileComponent->TileInfoManagerComponent->CheckTilesBelowAndMove();
+	// ProcessMatches();
+}
 
-	TileComponent->TileLineMatchProcessorComponent->CheckforLinesHorizontal();
-	TileComponent->TileLineMatchProcessorComponent->CheckforLinesVertical();
-	// CheckforLinesHorizontal();
-	// CheckforLinesVertical();
+void AGameBoard::ProcessSwitch(int32 IndexCurrent, FTileStatus DestinationStatus)
+{
+	FTileStatus CurrentStatus = TileComponent->TileInfoManagerComponent->TileStatuses[IndexCurrent];
+	
+	TileComponent->TileInfoManagerComponent->ChangeTileStatus(IndexCurrent, DestinationStatus);
+	
+	TileComponent->TilePlanesComponent->ChangeTileImage(IndexCurrent, DestinationStatus);
 
-	if (TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.IsEmpty() == false)
-	{
-		TileComponent->TileLineMatchProcessorComponent->ProcessMatches();
-		TileComponent->TileInfoManagerComponent->CheckTilesBelowAndMove();
-	}
+	ProcessMatches();
+	TileComponent->TileInfoManagerComponent->CheckTilesBelowAndMove();
+	ProcessMatches();
 }
 
 void AGameBoard::MoveTileRowsUpOneRow()
@@ -396,6 +215,21 @@ void AGameBoard::MoveTileRowsUpOneRow()
 	}
 }
 
+void AGameBoard::ProcessMatches()
+{
+	TileComponent->TileLineMatchProcessorComponent->CheckforLinesHorizontal();
+	TileComponent->TileLineMatchProcessorComponent->CheckforLinesVertical();
+	// CheckforLinesHorizontal();
+	// CheckforLinesVertical();
+
+	if (TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.IsEmpty() == false)
+	{
+		TileComponent->TileLineMatchProcessorComponent->ProcessMatches();
+		TileComponent->TileInfoManagerComponent->CheckTilesBelowAndMove();
+		ProcessMatches();
+	}
+}
+
 void AGameBoard::GameOverCheck(int32 TotalTiles, TArray<FTileStatus> TileStatusesCopy)
 {
 	int32 LastRowStartingIndex = TotalTiles - width;
@@ -410,6 +244,13 @@ void AGameBoard::GameOverCheck(int32 TotalTiles, TArray<FTileStatus> TileStatuse
 
 			if (APlayerStatePM* PlayerStatePM = Cast<APlayerStatePM>( UGameplayStatics::GetPlayerState(GetWorld(), 0)))
 			{
+				if (PlayerStatePM->GetPlayerLivesRemaining() <= 9)
+				{
+					if (AGameMode* GameMode = Cast<AGameMode>( UGameplayStatics::GetGameMode(GetWorld())))
+					{
+						GameMode->EndMatch();
+					}
+				}
 				PlayerStatePM->ChangePlayerLivesRemaining(-1);
 			}
 			return;
@@ -446,52 +287,10 @@ void AGameBoard::AddNewRowAtBottom()
 	MoveTileRowsUpOneRow();
 	TArray<FGameplayTag> NewRowGameplayTags = TileComponent->TilePopulatorComponent->GenerateTileLine();
 	PopulateRow(0, NewRowGameplayTags);
+	ProcessMatches();
 }
 
-// UTileInfo* AGameBoard::GetTileInfo(FGameplayTag GameplayTag)
-// {
-// 	if (GameplayTag == FGameplayTag::RequestGameplayTag(FName("EmptyTile")))
-// 	{
-// 		return TileInfoManagerComponent->TileInfoEmpty;
-// 	}
-// 	if (GameplayTag == FGameplayTag::RequestGameplayTag(FName("Affection.Sun")))
-// 	{
-// 		return TileInfoManagerComponent->TileInfoAffectionSun;
-// 	}
-//
-// 	if (GameplayTag == FGameplayTag::RequestGameplayTag(FName("Affection.Toy")))
-// 	{
-// 		return TileInfoManagerComponent->TileInfoAffectionToy;
-// 	}
-//
-// 	if (GameplayTag == FGameplayTag::RequestGameplayTag(FName("Affection.Plants")))
-// 	{
-// 		return TileInfoManagerComponent->TileInfoAffectionPlant;
-// 	}
-//
-// 	if (GameplayTag == FGameplayTag::RequestGameplayTag(FName("Affection.Food")))
-// 	{
-// 		return TileInfoManagerComponent->TileInfoAffectionFood;
-// 	}
-//
-// 	if (GameplayTag == FGameplayTag::RequestGameplayTag(FName("Goal.Bath")))
-// 	{
-// 		return TileInfoManagerComponent->TileInfoGoalBath;
-// 	}
-//
-// 	if (GameplayTag == FGameplayTag::RequestGameplayTag(FName("Goal.Pet")))
-// 	{
-// 		return TileInfoManagerComponent->TileInfoGoalPet;
-// 	}
-//
-// 	if (GameplayTag == FGameplayTag::RequestGameplayTag(FName("Goal.Dog")))
-// 	{
-// 		return TileInfoManagerComponent->TileInfoGoalDog;
-// 	}
-// 	return TileInfoManagerComponent->TileInfoAffectionSun;
-//
-// 	
-// }
+
 
 void AGameBoard::GetTileLocation(int32 tileIndex)
 {

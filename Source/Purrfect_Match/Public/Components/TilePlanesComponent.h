@@ -36,7 +36,7 @@ public:
 	void ChangeTileImage(int32 IndexTile, FTileStatus NewStatus);
 
 	UFUNCTION()
-	void MovePlaneDown(int32 IndexCurrent, int32 IndexDestination);
+	void SpawnPlaneAndMove(int32 IndexCurrent, int32 IndexDestination, FTileStatus DestinationStatus);
 
 	UFUNCTION()
 	void SwitchPlanes(int32 IndexLeft, int32 IndexRight);
@@ -51,6 +51,9 @@ public:
 	void DestroyMovePlane(UStaticMeshComponent* StaticMeshComponent, float DestroyAfterDuration);
 
 	UFUNCTION()
+	void OnMoveCompleteProcessSwitch(int32 IndexCurrent, FTileStatus DestinationStatus, float ProcessAfterDuration);
+
+	UFUNCTION()
 	UStaticMeshComponent* SpawnMovementPlane(FTransform TransformForSpawn);
 
 	// UPROPERTY()
@@ -58,7 +61,7 @@ public:
 	
 
 	UPROPERTY()
-	float movePlaneDuration = 2.0f;
+	float movePlaneDuration = 0.5f;
 
 	UPROPERTY()
 	TArray<FTimerHandle> ActiveTimers;
