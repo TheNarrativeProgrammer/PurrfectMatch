@@ -17,6 +17,9 @@ struct FMatchGroup
 
 	UPROPERTY(BlueprintReadWrite)
 	FGameplayTag GameplayTagGoalOrAffection;
+
+	UPROPERTY(BlueprintReadWrite)
+	int32 points = 0;
 };
 
 class UTileComponent;
@@ -37,6 +40,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ProcessMatches();
+
+	UFUNCTION(BlueprintCallable)
+	void ProcessPoints(FGameplayTag GameplayTag, int32 pointsScored);
 
 	UFUNCTION(BlueprintCallable)
 	void CheckforLinesHorizontal();

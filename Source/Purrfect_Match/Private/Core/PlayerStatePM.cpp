@@ -3,22 +3,27 @@
 
 #include "Core/PlayerStatePM.h"
 
+#include "Core/GameStatePM.h"
+#include "Logging/StructuredLog.h"
+#include "Kismet/GameplayStatics.h"
+
 APlayerStatePM::APlayerStatePM()
 {
 }
 
-void APlayerStatePM::IncreaseScore(float ScoreIncrumentAmount)
+void APlayerStatePM::ChangeScore(float ScoreIncrumentAmount)
 {
-	float newScore = ScoreIncrumentAmount + GetScore();
+	float oldScore = GetScore();
+	float newScore = ScoreIncrumentAmount + oldScore;
 	SetScore(newScore);
-	FString scoreString = FString::Printf(TEXT("Score Increase: %f"), newScore);
-	GEngine->AddOnScreenDebugMessage(0, 2.f, FColor::Blue, scoreString);
+
+	if (AGameStatePM* GameStatePM = Cast<AGameStatePM>(UGameplayStatics::GetGameState(GetWorld())))
+	{
+		UE_LOGFMT(LogTemp, Warning, "oldScore {0}", oldScore);
+		UE_LOGFMT(LogTemp, Warning, "newScore {0}", newScore);
+		UE_LOGFMT(LogTemp, Warning, "ScoreIncrumentAmount {0}", ScoreIncrumentAmount);
+		GameStatePM->PlayerStateScoreChangeDelegate.Broadcast(oldScore, newScore,ScoreIncrumentAmount);
+	}
 }
 
-void APlayerStatePM::DecreaseScore(float ScoreDecrumentAmount)
-{
-	float newScore = ScoreDecrumentAmount - GetScore();
-	SetScore(newScore);
-	FString scoreString = FString::Printf(TEXT("Score decrease: %f"), newScore);
-	GEngine->AddOnScreenDebugMessage(0, 2.f, FColor::Red, scoreString);
-}
+

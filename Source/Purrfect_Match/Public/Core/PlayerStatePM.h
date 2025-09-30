@@ -21,10 +21,8 @@ public:
 public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Score")
-	void IncreaseScore(float ScoreIncrumentAmount);
-
-	UFUNCTION(BlueprintCallable, Category = "Score")
-	void DecreaseScore(float ScoreDecrumentAmount);
+	void ChangeScore(float ScoreIncrumentAmount);
+	
 
 	
 };

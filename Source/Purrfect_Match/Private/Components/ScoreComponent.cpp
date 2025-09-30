@@ -24,7 +24,7 @@ void UScoreComponent::UpdateScore(int32 pointsScored)
 	{
 		if (APlayerStatePM* PlayerStatePM = Cast<APlayerStatePM>(PlayerState))
 		{
-			PlayerStatePM->IncreaseScore(pointsScored);
+			PlayerStatePM->ChangeScore(pointsScored);
 		}
 	}
 	// score += pointsScored;

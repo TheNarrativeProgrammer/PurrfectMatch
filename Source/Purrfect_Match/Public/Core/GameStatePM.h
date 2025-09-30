@@ -22,6 +22,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FGameBoardSwitchTilesSignature, int
 //PlayerPawn
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPawnPlayerRequestTileLocationSignature, int32, leftIndex);
 
+//PlayerState
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FPlayerStateScoreChangeSignature, int32, oldScore, int32, newScore, int32, pointChange);
+
 UENUM(Blueprintable, BlueprintType)
 enum ELevelStage : uint8
 {
@@ -58,6 +61,10 @@ public:
 
 	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "Gameboard Delegate")
 	FPawnPlayerRequestTileLocationSignature PawnPlayerRequestTileLocationDelegate;
+
+	//PlayerState
+	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "PlayerState Delegate")
+	FPlayerStateScoreChangeSignature PlayerStateScoreChangeDelegate;
 
 	UPROPERTY(BlueprintReadWrite, Blueprintable, Category = "Level Stages")
 	TEnumAsByte<ELevelStage> CurrentLevelStage;

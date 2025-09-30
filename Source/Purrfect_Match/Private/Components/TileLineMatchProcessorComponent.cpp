@@ -9,6 +9,7 @@
 #include "Core/PlayerStatePM.h"
 #include "Data/TileStatus.h"
 #include "GameBoard/GameBoard.h"
+#include "Logging/StructuredLog.h"
 #include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -44,6 +45,7 @@ void UTileLineMatchProcessorComponent::ProcessMatches()
 		for (int32 j = 0; j < indexOfMatchedTiles[i].indices.Num(); j++)
 		{
 			FTileStatus NewTileStatus;
+			ProcessPoints(indexOfMatchedTiles[i].GameplayTagGoalOrAffection, indexOfMatchedTiles[i].points);
 			if (UTileComponent* TileComponent = Cast<UTileComponent>(GetOwner()->GetComponentByClass(UTileComponent::StaticClass())))
 			{
 				if (AGameBoard* GameBoardOwner = Cast<AGameBoard>(GetOwner()))
@@ -64,6 +66,22 @@ void UTileLineMatchProcessorComponent::ProcessMatches()
 	}
 
 	indexOfMatchedTiles.Empty();
+}
+
+void UTileLineMatchProcessorComponent::ProcessPoints(FGameplayTag GameplayTag, int32 pointsScored)
+{
+	UE_LOGFMT(LogTemp, Warning, "Tag {0}", GameplayTag.ToString());
+	if (AActor* ActorOwner = Cast<AActor>(GetOwner()))
+	{
+		if (UScoreComponent* ScoreComponent = ActorOwner->GetComponentByClass<UScoreComponent>())
+		{
+			ScoreComponent->UpdateScore(pointsScored);
+			if (GameplayTag.IsValid() && GameplayTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Affection"))))
+			{
+				//GEngine->AddOnScreenDebugMessage(0, 2.0f, FColor::Red, "ProcessPoints");
+			}
+		}
+	}
 }
 
 void UTileLineMatchProcessorComponent::CheckforLinesHorizontal()
@@ -130,7 +148,7 @@ void UTileLineMatchProcessorComponent::CheckforLinesHorizontal()
 						ProcessMatchGroup(pointsScored, tagMatchStart, indexOfPossibledMatches, TileComponent, ScoreComponent, countMatchingTiles);
 					}
 				}
-				ScoreComponent->UpdateScore(pointsScored);
+				// ScoreComponent->UpdateScore(pointsScored);
 			}
 		}
 	}
@@ -219,7 +237,7 @@ void UTileLineMatchProcessorComponent::CheckforLinesVertical()
 						ProcessMatchGroup(pointsScored, tagMatchStart, indexOfPossibledMatches, TileComponent, ScoreComponent, countMatchingTiles);
 					}
 				}
-				ScoreComponent->UpdateScore(pointsScored);
+				//ScoreComponent->UpdateScore(pointsScored);
 			}
 		}
 	}
@@ -256,17 +274,24 @@ void UTileLineMatchProcessorComponent::ProcessMatchGroup(int& PointsScored, FGam
 {
 	FMatchGroup MatchGroup;
 	MatchGroup.indices = indexOfPossibledMatches;
+	int32 pointsScored = 0;
 	if (TagLeft.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Affection"))))
 	{
 		MatchGroup.GameplayTagGoalOrAffection = FGameplayTag::RequestGameplayTag(FName("Affection"));
+		//PointsScored += CountMatchingTiles * ScoreComponent->pointsPerMatch;
+		pointsScored = CountMatchingTiles * ScoreComponent->pointsPerMatch;
 	}
 	else
 	{
 		MatchGroup.GameplayTagGoalOrAffection = FGameplayTag::RequestGameplayTag(FName("Goal"));
+		//PointsScored += CountMatchingTiles * ScoreComponent->pointsPerMatch;
+		pointsScored = (CountMatchingTiles * ScoreComponent->pointsPerMatch) * -1;
 	}
-								
+	
+	
+	MatchGroup.points = pointsScored;
 	TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.Add(MatchGroup);
-	PointsScored += CountMatchingTiles * ScoreComponent->pointsPerMatch;
+	
 }
 
 void UTileLineMatchProcessorComponent::ResetCountIndexAndArray(int32& CountMatchingTiles,
