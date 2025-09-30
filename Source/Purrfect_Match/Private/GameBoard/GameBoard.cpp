@@ -10,6 +10,8 @@
 #include "Components/TileComponent.h"
 #include "Components/TilePlanesComponent.h"
 #include "Components/ScoreComponent.h"
+#include "Core/PlayerStatePM.h"
+#include "Kismet/GameplayStatics.h"
 #include "Logging/StructuredLog.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "SparseVolumeTexture/SparseVolumeTexture.h"
@@ -405,6 +407,11 @@ void AGameBoard::GameOverCheck(int32 TotalTiles, TArray<FTileStatus> TileStatuse
 			GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Red, "Game Over");
 			UE_LOGFMT(LogTemp, Warning, "Game Over");
 			GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+
+			if (APlayerStatePM* PlayerStatePM = Cast<APlayerStatePM>( UGameplayStatics::GetPlayerState(GetWorld(), 0)))
+			{
+				PlayerStatePM->ChangePlayerLivesRemaining(-1);
+			}
 			return;
 		}
 	}

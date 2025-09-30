@@ -181,8 +181,8 @@ public:
 	UFUNCTION()
 	void PopulateRow(int32 ColumnIndex, TArray<FGameplayTag> GameplayTags);
 
-	UPROPERTY()
-	float timeNewRowAdd = 5.0f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time")
+	float timeNewRowAdd = 10.0f;
 
 	UFUNCTION()
 	void StartTimer();

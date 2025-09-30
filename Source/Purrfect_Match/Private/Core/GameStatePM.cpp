@@ -7,3 +7,8 @@ void AGameStatePM::SetLevelStage(TEnumAsByte<ELevelStage> LevelStage)
 {
 	CurrentLevelStage = LevelStage;
 }
+
+void AGameStatePM::HandleRestartingLevel()
+{
+	GameStateLiveLostRestartLevelDelegate.Broadcast();
+}

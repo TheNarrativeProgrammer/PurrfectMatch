@@ -26,4 +26,15 @@ void APlayerStatePM::ChangeScore(float ScoreIncrumentAmount)
 	}
 }
 
+void APlayerStatePM::ChangePlayerLivesRemaining(int32 AmountLivesGainedOrLost)
+{
+	int32 oldLivesRemaining = playerLivesRemaining;
+	playerLivesRemaining += AmountLivesGainedOrLost;
+
+	if (AGameStatePM* GameStatePM = Cast<AGameStatePM>(UGameplayStatics::GetGameState(GetWorld())))
+	{
+		GameStatePM->PlayerStateLiveChangeDelegate.Broadcast(oldLivesRemaining, playerLivesRemaining, AmountLivesGainedOrLost);
+	}
+}
+
 

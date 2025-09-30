@@ -25,6 +25,12 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPawnPlayerRequestTileLocationSignat
 //PlayerState
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FPlayerStateScoreChangeSignature, int32, oldScore, int32, newScore, int32, pointChange);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FPlayerStateLiveChangeSignature, int32, oldLives, int32, newLives, int32, livesChange);
+
+//GameState - Match states
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGameStateLiveLostRestartLevelSignature);
+
+
 UENUM(Blueprintable, BlueprintType)
 enum ELevelStage : uint8
 {
@@ -66,6 +72,14 @@ public:
 	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "PlayerState Delegate")
 	FPlayerStateScoreChangeSignature PlayerStateScoreChangeDelegate;
 
+
+	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "PlayerState Delegate")
+	FPlayerStateLiveChangeSignature PlayerStateLiveChangeDelegate;
+
+	//Game State - match state
+	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "GameState Delegate")
+	FGameStateLiveLostRestartLevelSignature GameStateLiveLostRestartLevelDelegate;
+
 	UPROPERTY(BlueprintReadWrite, Blueprintable, Category = "Level Stages")
 	TEnumAsByte<ELevelStage> CurrentLevelStage;
 
@@ -74,6 +88,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Level Stages")
 	TEnumAsByte<ELevelStage> GetLevelStage() const {return CurrentLevelStage;}
+
+	UFUNCTION(BlueprintCallable, Category = "Match State")
+	void HandleRestartingLevel();
 
 
 	
