@@ -3,6 +3,7 @@
 
 #include "Components/ScoreComponent.h"
 
+#include "GameplayTagContainer.h"
 #include "Core/PlayerStatePM.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -17,9 +18,26 @@ UScoreComponent::UScoreComponent()
 }
 
 
-void UScoreComponent::UpdateScore(int32 pointsScored)
+void UScoreComponent::UpdateScore(int32 pointsScored, FGameplayTag GameplayTag)
 {
-	
+	// score += pointsScored;
+	// GEngine->AddOnScreenDebugMessage(3, 5.0f, FColor::Green, FString::Printf(TEXT("Scored: %d"), score));
+	int32 signedPointsScored = 0;
+	if (score < totalAffectionNeeded)
+	{
+		if (GameplayTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Affection"))))
+		{
+			signedPointsScored = pointsScored;
+		}
+		else
+		{
+			signedPointsScored = pointsScored * -1;
+		}
+	}
+	else
+	{
+		signedPointsScored = pointsScored;
+	}
 	if (APlayerState* PlayerState = UGameplayStatics::GetPlayerState(GetWorld(), 0))
 	{
 		if (APlayerStatePM* PlayerStatePM = Cast<APlayerStatePM>(PlayerState))
@@ -27,8 +45,12 @@ void UScoreComponent::UpdateScore(int32 pointsScored)
 			PlayerStatePM->ChangeScore(pointsScored);
 		}
 	}
-	// score += pointsScored;
-	// GEngine->AddOnScreenDebugMessage(3, 5.0f, FColor::Green, FString::Printf(TEXT("Scored: %d"), score));
+	
+}
+
+void UScoreComponent::SetTotalAffectionNeeded(int32 InTotalAffectionNeeded)
+{
+	totalAffectionNeeded = InTotalAffectionNeeded;
 }
 
 // Called when the game starts

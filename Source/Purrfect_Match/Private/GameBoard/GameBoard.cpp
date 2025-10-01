@@ -70,6 +70,7 @@ void AGameBoard::InitializeBoard()
 	if (AGameStatePM* GameStatePM = Cast<AGameStatePM>(GetWorld()->GetGameState()))
 	{
 		GameStatePM->GameBoardSendBoardDimensionsDelegate.Broadcast(width, height);
+		GameStatePM->GameBoardSendLevelPropertiesDelegate.Broadcast(ScoreComponent->totalAffectionNeeded, TileComponent->TilePopulatorComponent->GetLevelNumber());
 		// GameStatePM->GameBoardPopulatedDelegate.Broadcast();
 		// StartTimer();
 		PopulateBoard();
@@ -83,7 +84,7 @@ void AGameBoard::InitializeLevelProperties()
 	{
 		TileComponent->TilePopulatorComponent->SetLevel(LevelData->level);
 		SetTimeNewRowAdd(LevelData->TimeToSpawnNewRow);
-		SetTotalAffectionNeeded(LevelData->AffectionLevelMax);
+		ScoreComponent->SetTotalAffectionNeeded(LevelData->AffectionLevelMax);
 	}
 	
 }
@@ -343,10 +344,7 @@ void AGameBoard::SetTimeNewRowAdd(float InTimeNewRowAdd)
 	timeNewRowAdd = InTimeNewRowAdd;
 }
 
-void AGameBoard::SetTotalAffectionNeeded(int32 InTotalAffectionNeeded)
-{
-	totalAffectionNeeded = InTotalAffectionNeeded;
-}
+
 
 void AGameBoard::StartTimer()
 {

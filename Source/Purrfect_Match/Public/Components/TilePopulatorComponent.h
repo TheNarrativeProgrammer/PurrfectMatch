@@ -19,6 +19,9 @@ public:
 	// Sets default values for this component's properties
 	UTilePopulatorComponent();
 
+	UFUNCTION(BlueprintCallable)
+	int32 GetLevelNumber() const {return level;}
+
 	
 
 protected:

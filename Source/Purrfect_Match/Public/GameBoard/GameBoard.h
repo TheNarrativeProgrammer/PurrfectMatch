@@ -232,15 +232,12 @@ public:
 
 	UFUNCTION()
 	void SetTimeNewRowAdd(float InTimeNewRowAdd);
-
-	UFUNCTION()
-	void SetTotalAffectionNeeded(int32 InTotalAffectionNeeded);
+	
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time")
 	float timeNewRowAdd = 10.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time")
-	int32 totalAffectionNeeded  = 200;
+	
 
 	UFUNCTION()
 	void StartTimer();

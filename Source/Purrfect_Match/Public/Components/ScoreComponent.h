@@ -19,6 +19,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Score")
 	int32 score = 0;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time")
+	int32 totalAffectionNeeded  = 200;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Points")
 	int32 minimumMatchingForPoint = 3;
 
@@ -26,7 +29,10 @@ public:
 	int32 pointsPerMatch = 5;
 
 	UFUNCTION(BlueprintCallable)
-	void UpdateScore(int32 pointsScored);
+	void UpdateScore(int32 pointsScored, FGameplayTag GameplayTag);
+
+	UFUNCTION()
+	void SetTotalAffectionNeeded(int32 InTotalAffectionNeeded);
 
 protected:
 	// Called when the game starts

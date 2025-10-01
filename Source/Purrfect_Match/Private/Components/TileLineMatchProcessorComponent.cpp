@@ -46,7 +46,7 @@ void UTileLineMatchProcessorComponent::ProcessMatches()
 		for (int32 j = 0; j < indexOfMatchedTiles[i].indices.Num(); j++)
 		{
 			FTileStatus NewTileStatus;
-			ProcessPoints(indexOfMatchedTiles[i].GameplayTagGoalOrAffection, indexOfMatchedTiles[i].points);
+			
 			if (UTileComponent* TileComponent = Cast<UTileComponent>(GetOwner()->GetComponentByClass(UTileComponent::StaticClass())))
 			{
 				if (AGameBoard* GameBoardOwner = Cast<AGameBoard>(GetOwner()))
@@ -72,6 +72,7 @@ void UTileLineMatchProcessorComponent::ProcessMatches()
 				}
 			}
 		}
+		ProcessPoints(indexOfMatchedTiles[i].GameplayTagGoalOrAffection, indexOfMatchedTiles[i].points);
  		indexOfMatchedTiles.RemoveAt(i);
 	}
 
@@ -85,7 +86,7 @@ void UTileLineMatchProcessorComponent::ProcessPoints(FGameplayTag GameplayTag, i
 	{
 		if (UScoreComponent* ScoreComponent = ActorOwner->GetComponentByClass<UScoreComponent>())
 		{
-			ScoreComponent->UpdateScore(pointsScored);
+			ScoreComponent->UpdateScore(pointsScored, GameplayTag);
 			if (GameplayTag.IsValid() && GameplayTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Affection"))))
 			{
 				//GEngine->AddOnScreenDebugMessage(0, 2.0f, FColor::Red, "ProcessPoints");
@@ -284,20 +285,15 @@ void UTileLineMatchProcessorComponent::ProcessMatchGroup(int& PointsScored, FGam
 {
 	FMatchGroup MatchGroup;
 	MatchGroup.indices = indexOfPossibledMatches;
-	int32 pointsScored = 0;
+	int32 pointsScored = CountMatchingTiles * ScoreComponent->pointsPerMatch;
 	if (TagLeft.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Affection"))))
 	{
 		MatchGroup.GameplayTagGoalOrAffection = FGameplayTag::RequestGameplayTag(FName("Affection"));
-		//PointsScored += CountMatchingTiles * ScoreComponent->pointsPerMatch;
-		pointsScored = CountMatchingTiles * ScoreComponent->pointsPerMatch;
 	}
 	else
 	{
 		MatchGroup.GameplayTagGoalOrAffection = FGameplayTag::RequestGameplayTag(FName("Goal"));
-		//PointsScored += CountMatchingTiles * ScoreComponent->pointsPerMatch;
-		pointsScored = (CountMatchingTiles * ScoreComponent->pointsPerMatch) * -1;
 	}
-	
 	
 	MatchGroup.points = pointsScored;
 	TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.Add(MatchGroup);
