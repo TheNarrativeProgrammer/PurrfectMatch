@@ -63,6 +63,14 @@ void UTileLineMatchProcessorComponent::ProcessMatches()
 					}
 				}
 			}
+
+			if (AGameBoard* GameBoardOwner = Cast<AGameBoard>(GetOwner()))
+			{
+				if (UTilePlanesComponent* TilePlanesComponent =  GameBoardOwner->GetComponentByClass<UTilePlanesComponent>())
+				{
+					TilePlanesComponent->SpawnScoreMaterialPlane(indexOfMatchedTiles[i].indices[j], indexOfMatchedTiles[i].GameplayTagGoalOrAffection);
+				}
+			}
 		}
  		indexOfMatchedTiles.RemoveAt(i);
 	}

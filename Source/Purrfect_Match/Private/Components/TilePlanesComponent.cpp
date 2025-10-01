@@ -149,6 +149,26 @@ void UTilePlanesComponent::SpawnPlaneAndDrop(int32 IndexCurrent, int32 IndexDest
 	OnDropCompleteProcessDrop(IndexDestination, CurrentPopulatedStatus, movePlaneDuration + 0.1f);
 }
 
+void UTilePlanesComponent::SpawnScoreMaterialPlane(int32 IndexOfMatch, FGameplayTag GameplayTag)
+{
+	FGameplayTag AffectedGameplayTag = FGameplayTag::RequestGameplayTag(FName("Affection"));
+	const FTransform Transform = BoardTiles[IndexOfMatch]->GetRelativeTransform();
+	
+	
+		if (UStaticMeshComponent* StaticMeshComponent = SpawnMovementPlane(Transform))
+		{
+			if (GameplayTag.MatchesTag(AffectedGameplayTag))
+			{
+				StaticMeshComponent->SetMaterial(0, ScoreAffectionTileMaterial);
+			}
+			else
+			{
+				StaticMeshComponent->SetMaterial(0, GoalNegativeTileMaterial);
+			}
+			DestroyMovePlane(StaticMeshComponent, ScorePlaneDuration);
+		}
+}
+
 void UTilePlanesComponent::SwitchPlanes(int32 indexLeft, int32 indexRight)
 {
 	const FTransform TransformRight = BoardTiles[indexRight]->GetRelativeTransform();

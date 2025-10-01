@@ -32,6 +32,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Board")
 	UMaterialInterface* BoardTileMaterial;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Board")
+	UMaterialInterface* ScoreAffectionTileMaterial;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Board")
+	UMaterialInterface* GoalNegativeTileMaterial;
+
 	UFUNCTION(BlueprintCallable)
 	FVector GetTileLocationByArrayIndex(int32 index);
 
@@ -43,6 +49,9 @@ public:
 
 	UFUNCTION()
 	void SpawnPlaneAndDrop(int32 IndexCurrent, int32 IndexDestination, FTileStatus CurrentPopulatedStatus);
+
+	UFUNCTION()
+	void SpawnScoreMaterialPlane(int32 IndexOfMatch, FGameplayTag GameplayTag);
 
 	UFUNCTION()
 	void SwitchPlanes(int32 IndexLeft, int32 IndexRight);
@@ -69,8 +78,11 @@ public:
 	// TObjectPtr<UStaticMeshComponent> MoveStaticMeshComponent;
 	
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time of Plane Destruction")
 	float movePlaneDuration = 0.5f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time of Plane Destruction")
+	float ScorePlaneDuration = 0.4f;
 
 	UPROPERTY()
 	TArray<FTimerHandle> ActiveTimers;
