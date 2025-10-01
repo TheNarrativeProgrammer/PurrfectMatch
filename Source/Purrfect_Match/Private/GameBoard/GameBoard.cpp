@@ -3,6 +3,8 @@
 
 
 #include "GameBoard/GameBoard.h"
+
+#include "Components/LevelDataManagerComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Core/GameStatePM.h"
 #include "Components/TilePopulatorComponent.h"
@@ -27,6 +29,7 @@ AGameBoard::AGameBoard()
 	DelegateBindingCompGameBoard = CreateDefaultSubobject<UDelegateBindingCompGameBoard>(TEXT("DelegateBindingCompGameBoard"));
 	TileComponent = CreateDefaultSubobject<UTileComponent>(TEXT("TileComponent"));
 	ScoreComponent = CreateDefaultSubobject<UScoreComponent>(TEXT("ScoreComponent"));
+	LevelDataManagerComponent = CreateDefaultSubobject<ULevelDataManagerComponent>(TEXT("LevelDataManagerComponnent"));
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -50,6 +53,10 @@ int32 AGameBoard::GetBoardHeight_Implementation()
 void AGameBoard::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void AGameBoard::InitializeBoard()
+{
 	for (int y = 0; y < height; y++)
 	{
 		for (int x = 0; x < width; x++)
@@ -63,10 +70,30 @@ void AGameBoard::BeginPlay()
 	if (AGameStatePM* GameStatePM = Cast<AGameStatePM>(GetWorld()->GetGameState()))
 	{
 		GameStatePM->GameBoardSendBoardDimensionsDelegate.Broadcast(width, height);
-		GameStatePM->GameBoardPopulatedDelegate.Broadcast();
-		StartTimer();
+		// GameStatePM->GameBoardPopulatedDelegate.Broadcast();
+		// StartTimer();
+		PopulateBoard();
 		ProcessMatches();
 	}
+}
+
+void AGameBoard::InitializeLevelProperties()
+{
+	if (ULevelData* LevelData = LevelDataManagerComponent->GetLevelData(LevelStage))
+	{
+		TileComponent->TilePopulatorComponent->SetLevel(LevelData->level);
+		SetTimeNewRowAdd(LevelData->TimeToSpawnNewRow);
+		SetTotalAffectionNeeded(LevelData->AffectionLevelMax);
+	}
+	
+}
+
+void AGameBoard::OnLevelStarSetLevelStageAndtInitialze(ELevelStage InLevelStage)
+{
+	LevelStage = InLevelStage;
+	InitializeLevelProperties();
+	TileComponent->TilePlanesComponent->DestroyPlanes();
+	InitializeBoard();
 }
 
 void AGameBoard::SpawnPlane(int x, int y)
@@ -158,10 +185,10 @@ void AGameBoard::SwitchTiles(int32 indexLeft, int32 indexRight)
 	FTileStatus RightStatus = TileComponent->TileInfoManagerComponent->TileStatuses[indexRight];
 	FTileStatus LeftStatus = TileComponent->TileInfoManagerComponent->TileStatuses[indexLeft];
 
-	TileComponent->TilePlanesComponent->SpawnPlaneAndMove(indexLeft, indexRight, RightStatus);
+	TileComponent->TilePlanesComponent->SpawnPlaneAndSwitch(indexLeft, indexRight, RightStatus, false);
 
 	
-	TileComponent->TilePlanesComponent->SpawnPlaneAndMove(indexRight, indexLeft, LeftStatus);
+	TileComponent->TilePlanesComponent->SpawnPlaneAndSwitch(indexRight, indexLeft, LeftStatus, true);
 
 	// FTileStatus LeftStatus = TileComponent->TileInfoManagerComponent->TileStatuses[indexLeft];
 	// FTileStatus RightStatus = TileComponent->TileInfoManagerComponent->TileStatuses[indexRight];
@@ -177,17 +204,47 @@ void AGameBoard::SwitchTiles(int32 indexLeft, int32 indexRight)
 	// ProcessMatches();
 }
 
-void AGameBoard::ProcessSwitch(int32 IndexCurrent, FTileStatus DestinationStatus)
+void AGameBoard::DropPopulatedTilesAboveEmpty(int32 indexPopulated, int32 indexEmpty)
+{
+	FTileStatus EmptyStatus = TileComponent->TileInfoManagerComponent->TileStatuses[indexEmpty];
+	FTileStatus PopulatedStatus = TileComponent->TileInfoManagerComponent->TileStatuses[indexPopulated];
+
+	TileComponent->TilePlanesComponent->SpawnPlaneAndDrop(indexPopulated, indexEmpty, PopulatedStatus);
+	//TileComponent->TilePlanesComponent->SpawnPlaneAndMove(indexEmpty, indexPopulated, PopulatedStatus);
+
+	//Change populated tile to empty immediately
+	TileComponent->TileInfoManagerComponent->ChangeTileStatus(indexPopulated, EmptyStatus);
+	TileComponent->TilePlanesComponent->ChangeTileImage(indexPopulated, EmptyStatus);
+	//change status, not image, of empty to populated
+	TileComponent->TileInfoManagerComponent->ChangeTileStatus(indexEmpty, PopulatedStatus);
+}
+
+void AGameBoard::ProcessSwitch(int32 IndexCurrent, FTileStatus DestinationStatus, bool isSecondSwitch)
 {
 	FTileStatus CurrentStatus = TileComponent->TileInfoManagerComponent->TileStatuses[IndexCurrent];
 	
 	TileComponent->TileInfoManagerComponent->ChangeTileStatus(IndexCurrent, DestinationStatus);
 	
 	TileComponent->TilePlanesComponent->ChangeTileImage(IndexCurrent, DestinationStatus);
+	
+	if (isSecondSwitch == true)
+	{
+		TileComponent->TileInfoManagerComponent->CheckTilesBelowAndMove();
+		ProcessMatches();
+	}
+	
+}
 
-	ProcessMatches();
-	TileComponent->TileInfoManagerComponent->CheckTilesBelowAndMove();
-	ProcessMatches();
+void AGameBoard::ProcessDrop(int32 IndexDestination, FTileStatus CurrentStatus)
+{
+	
+	TileComponent->TileInfoManagerComponent->ChangeTileStatus(IndexDestination, CurrentStatus);
+	
+	TileComponent->TilePlanesComponent->ChangeTileImage(IndexDestination, CurrentStatus);
+
+	// ProcessMatches();
+	// TileComponent->TileInfoManagerComponent->CheckTilesBelowAndMove();
+	// ProcessMatches();
 }
 
 void AGameBoard::MoveTileRowsUpOneRow()
@@ -238,20 +295,24 @@ void AGameBoard::GameOverCheck(int32 TotalTiles, TArray<FTileStatus> TileStatuse
 	{
 		if (TileStatusesCopy[i].TileInfo && TileStatusesCopy[i].TileInfo->GameplayTag != GameplayTagEmptyTile)
 		{
-			GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Red, "Game Over");
+			GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Red, "Game Over FIRED");
 			UE_LOGFMT(LogTemp, Warning, "Game Over");
 			GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
 
 			if (APlayerStatePM* PlayerStatePM = Cast<APlayerStatePM>( UGameplayStatics::GetPlayerState(GetWorld(), 0)))
 			{
-				if (PlayerStatePM->GetPlayerLivesRemaining() <= 9)
+				int32 livesRemaining = PlayerStatePM->GetPlayerLivesRemaining();
+				if (livesRemaining <= 9)
 				{
 					if (AGameMode* GameMode = Cast<AGameMode>( UGameplayStatics::GetGameMode(GetWorld())))
 					{
 						GameMode->EndMatch();
 					}
 				}
-				PlayerStatePM->ChangePlayerLivesRemaining(-1);
+				else
+				{
+					PlayerStatePM->ChangePlayerLivesRemaining(-1);
+				}
 			}
 			return;
 		}
@@ -275,6 +336,16 @@ void AGameBoard::PopulateRow(int32 ColumnIndex, TArray<FGameplayTag> GameplayTag
 		TileComponent->TilePlanesComponent->ChangeTileImage(index, NewStatus);
 		tagindex++;
 	}
+}
+
+void AGameBoard::SetTimeNewRowAdd(float InTimeNewRowAdd)
+{
+	timeNewRowAdd = InTimeNewRowAdd;
+}
+
+void AGameBoard::SetTotalAffectionNeeded(int32 InTotalAffectionNeeded)
+{
+	totalAffectionNeeded = InTotalAffectionNeeded;
 }
 
 void AGameBoard::StartTimer()

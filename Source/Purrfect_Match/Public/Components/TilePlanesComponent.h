@@ -17,8 +17,11 @@ public:
 	// Sets default values for this component's properties
 	UTilePlanesComponent();
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Board")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Board")
 	TArray<UStaticMeshComponent*> BoardTiles;
+
+	UFUNCTION(BlueprintCallable)
+	void DestroyPlanes();
 
 	UFUNCTION(BlueprintCallable)
 	void SpawnPlaneAtLocation(FVector PlaneSpawnLocation);
@@ -36,7 +39,10 @@ public:
 	void ChangeTileImage(int32 IndexTile, FTileStatus NewStatus);
 
 	UFUNCTION()
-	void SpawnPlaneAndMove(int32 IndexCurrent, int32 IndexDestination, FTileStatus DestinationStatus);
+	void SpawnPlaneAndSwitch(int32 IndexCurrent, int32 IndexDestination, FTileStatus DestinationStatus, bool isSecondSwitch);
+
+	UFUNCTION()
+	void SpawnPlaneAndDrop(int32 IndexCurrent, int32 IndexDestination, FTileStatus CurrentPopulatedStatus);
 
 	UFUNCTION()
 	void SwitchPlanes(int32 IndexLeft, int32 IndexRight);
@@ -51,7 +57,10 @@ public:
 	void DestroyMovePlane(UStaticMeshComponent* StaticMeshComponent, float DestroyAfterDuration);
 
 	UFUNCTION()
-	void OnMoveCompleteProcessSwitch(int32 IndexCurrent, FTileStatus DestinationStatus, float ProcessAfterDuration);
+	void OnSwitchCompleteProcessSwitch(int32 IndexCurrent, FTileStatus DestinationStatus, float ProcessAfterDuration, bool isSecondSwitch);
+
+	UFUNCTION()
+	void OnDropCompleteProcessDrop(int32 IndexDestination, FTileStatus CurrentStatus, float ProcessAfterDuration);
 
 	UFUNCTION()
 	UStaticMeshComponent* SpawnMovementPlane(FTransform TransformForSpawn);

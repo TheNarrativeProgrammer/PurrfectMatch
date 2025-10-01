@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameInstancePM.h"
 #include "GameFramework/GameState.h"
 #include "GameStatePM.generated.h"
 
@@ -30,7 +31,12 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FPlayerStateLiveChangeSignature, 
 //GameState - Match states
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGameStateRestartLevelSignature);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGameStateRestartGameSignature);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGameStateMatchEndSignature);
+
+//GameMode
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGameModeLoadLevelBoardSignature, ELevelStage, LevelStage);
 
 
 
@@ -71,15 +77,22 @@ public:
 	FGameStateRestartLevelSignature GameStateRestartLevelDelegate;
 
 	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "GameState Delegate")
+	FGameStateRestartGameSignature GameStateRestartGameDelegate;
+
+	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "GameState Delegate")
 	FGameStateMatchEndSignature GameStateMatchEndDelegate;
 
-	
-	
+	//GameMode
+	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "GameState Delegate")
+	FGameModeLoadLevelBoardSignature GameModeLoadLevelBoardDelegate;
 
 	
 
 	UFUNCTION(BlueprintCallable, Category = "Match State")
 	void HandleRestartingLevel();
+
+	UFUNCTION(BlueprintCallable, Category = "Match State")
+	void HandleRestartingGame();
 
 	virtual void HandleMatchHasEnded() override;
 	

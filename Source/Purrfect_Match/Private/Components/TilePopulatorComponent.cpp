@@ -124,6 +124,11 @@ FGameplayTag UTilePopulatorComponent::GetTileTag(int32 tileIconNumber)
 	}
 }
 
+void UTilePopulatorComponent::SetLevel(int32 InLevel)
+{
+	level = InLevel;
+}
+
 void UTilePopulatorComponent::PopulateBoardWithInitialTiles()
 {
 	for (int i = 0; i < numberOfRowsAtLevelStart; i++)

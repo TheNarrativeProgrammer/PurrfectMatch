@@ -20,8 +20,18 @@ class PURRFECT_MATCH_API AGameModePM : public AGameMode
 
 	public:
 	AGameModePM();
+
+	virtual void StartMatch() override;
+
+	virtual void EndMatch() override;
 	
 	virtual void BeginPlay() override;
+
+	UFUNCTION(BlueprintCallable)
+	void LoadLevelGameBoard();
+
+	UFUNCTION(BlueprintCallable)
+	void DestroyLevelGameBoard();
 
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 

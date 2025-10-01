@@ -165,7 +165,12 @@ void UTileInfoManagerComponent::CheckTilesBelowAndMove()
 					//TilePlanesComponent->MovePlaneDown(Index, LowestEmptyTile);
 				}
 			}
-			MoveTileDown(Index, LowestEmptyTile);
+
+			if (AGameBoard* GameBoard = Cast<AGameBoard>(GetOwner()))
+			{
+				GameBoard->DropPopulatedTilesAboveEmpty(Index, LowestEmptyTile);
+			}
+			//MoveTileDown(Index, LowestEmptyTile);
 		}
 	}
 }

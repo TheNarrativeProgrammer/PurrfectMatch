@@ -39,8 +39,9 @@ void UTileLineMatchProcessorComponent::ProcessMatches()
 	{
 		return;
 	}
+	int32 arrayLength = indexOfMatchedTiles.Num() - 1;
 	
-	for (int32 i = 0; i < indexOfMatchedTiles.Num(); i++)
+	for (int32 i = arrayLength; i >= 0; i--)
 	{
 		for (int32 j = 0; j < indexOfMatchedTiles[i].indices.Num(); j++)
 		{
@@ -63,9 +64,10 @@ void UTileLineMatchProcessorComponent::ProcessMatches()
 				}
 			}
 		}
+ 		indexOfMatchedTiles.RemoveAt(i);
 	}
 
-	indexOfMatchedTiles.Empty();
+	//indexOfMatchedTiles.Empty();
 }
 
 void UTileLineMatchProcessorComponent::ProcessPoints(FGameplayTag GameplayTag, int32 pointsScored)

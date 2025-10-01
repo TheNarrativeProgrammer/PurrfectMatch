@@ -19,6 +19,19 @@ UTilePlanesComponent::UTilePlanesComponent()
 }
 
 
+void UTilePlanesComponent::DestroyPlanes()
+{
+	if (BoardTiles.IsEmpty())
+	{
+		return;
+	}
+	for (int32 i = 0; i < BoardTiles.Num(); i++)
+	{
+		BoardTiles[i]->DestroyComponent();
+	}
+	BoardTiles.Empty();
+}
+
 void UTilePlanesComponent::SpawnPlaneAtLocation(FVector PlaneSpawnLocation)
 {
 	FTransform PlaneSpawnTransform;
@@ -62,7 +75,7 @@ void UTilePlanesComponent::ChangeTileImage(int32 IndexTile, FTileStatus NewStatu
 	BoardTiles[IndexTile]->SetMaterial(0, NewStatus.TileInfo->Material);
 }
 
-void UTilePlanesComponent::SpawnPlaneAndMove(int32 IndexCurrent, int32 IndexDestination, FTileStatus DestinationStatus)
+void UTilePlanesComponent::SpawnPlaneAndSwitch(int32 IndexCurrent, int32 IndexDestination, FTileStatus DestinationStatus, bool isSecondSwitch)
 {
 	if (BoardTiles.IsValidIndex(IndexCurrent) == false && BoardTiles.IsValidIndex(IndexDestination) == false)
 	{
@@ -88,11 +101,53 @@ void UTilePlanesComponent::SpawnPlaneAndMove(int32 IndexCurrent, int32 IndexDest
 	UKismetSystemLibrary::MoveComponentTo(MoveStaticMeshComponent,TransformDesination.GetLocation(), TransformDesination.Rotator(),
 		false, false, movePlaneDuration, false, EMoveComponentAction::Move, LatentInfoDestination);
 
-	DestroyMovePlane(MoveStaticMeshComponent, movePlaneDuration + 0.1f);
-	OnMoveCompleteProcessSwitch(IndexCurrent, DestinationStatus, movePlaneDuration + 0.1f);
+	DestroyMovePlane(MoveStaticMeshComponent, movePlaneDuration + 0.05f);
+
+	if (isSecondSwitch == true)
+	{
+		OnSwitchCompleteProcessSwitch(IndexCurrent, DestinationStatus, movePlaneDuration + 0.07f, isSecondSwitch);
+	}
+	else
+	{
+
+		OnSwitchCompleteProcessSwitch(IndexCurrent, DestinationStatus, movePlaneDuration + 0.05f, isSecondSwitch);
+		
+	}
+	
+	
+	
 }
 
 
+void UTilePlanesComponent::SpawnPlaneAndDrop(int32 IndexCurrent, int32 IndexDestination, FTileStatus CurrentPopulatedStatus)
+{
+	if (BoardTiles.IsValidIndex(IndexCurrent) == false && BoardTiles.IsValidIndex(IndexDestination) == false)
+	{
+		return;
+	}
+	FTransform PlaneSpawnTransform = BoardTiles[IndexCurrent]->GetRelativeTransform();
+	
+	UStaticMeshComponent* MoveStaticMeshComponent = SpawnMovementPlane(PlaneSpawnTransform);
+	if (!MoveStaticMeshComponent) return;
+	
+	AssignTileImageToMovePlane(IndexCurrent, MoveStaticMeshComponent);
+	//ChangeAppearanceOfPlaneToMimicEmpty(IndexCurrent);
+
+	const FTransform TransformDesination = BoardTiles[IndexDestination]->GetRelativeTransform();
+
+	static int32 MoveUUID = 1000;
+	FLatentActionInfo LatentInfoDestination;
+	LatentInfoDestination.CallbackTarget = this;
+	LatentInfoDestination.UUID = MoveUUID++;
+	LatentInfoDestination.Linkage = 0;
+	LatentInfoDestination.ExecutionFunction = NAME_None;
+
+	UKismetSystemLibrary::MoveComponentTo(MoveStaticMeshComponent,TransformDesination.GetLocation(), TransformDesination.Rotator(),
+		false, false, movePlaneDuration, false, EMoveComponentAction::Move, LatentInfoDestination);
+
+	DestroyMovePlane(MoveStaticMeshComponent, movePlaneDuration + 0.1f);
+	OnDropCompleteProcessDrop(IndexDestination, CurrentPopulatedStatus, movePlaneDuration + 0.1f);
+}
 
 void UTilePlanesComponent::SwitchPlanes(int32 indexLeft, int32 indexRight)
 {
@@ -154,18 +209,40 @@ void UTilePlanesComponent::DestroyMovePlane(UStaticMeshComponent* StaticMeshComp
 	ActiveTimers.Add(TimerHandle);
 }
 
-void UTilePlanesComponent::OnMoveCompleteProcessSwitch(int32 IndexCurrent, FTileStatus DestinationStatus, float ProcessAfterDuration)
+void UTilePlanesComponent::OnSwitchCompleteProcessSwitch(int32 IndexCurrent, FTileStatus DestinationStatus, float ProcessAfterDuration, bool isSecondSwitch)
 {
 	FTimerHandle TimerHandle;
 	GetWorld()->GetTimerManager().SetTimer(
 		TimerHandle,
-		[this, IndexCurrent, DestinationStatus, TimerHandle]()
+		[this, IndexCurrent, DestinationStatus, TimerHandle, isSecondSwitch]()
 		{
 			if (AActor* ActorOwner = GetOwner())
 			{
 				if (AGameBoard* GameBoard = Cast<AGameBoard>(ActorOwner))
 				{
-					GameBoard->ProcessSwitch(IndexCurrent, DestinationStatus);
+					GameBoard->ProcessSwitch(IndexCurrent, DestinationStatus, isSecondSwitch);
+					ActiveTimers.Remove(TimerHandle);
+				}
+			}
+		},
+			ProcessAfterDuration, false
+	);
+	ActiveTimers.Add(TimerHandle);
+}
+
+void UTilePlanesComponent::OnDropCompleteProcessDrop(int32 IndexDestination, FTileStatus CurrentStatus,
+	float ProcessAfterDuration)
+{
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(
+		TimerHandle,
+		[this, IndexDestination, CurrentStatus, TimerHandle]()
+		{
+			if (AActor* ActorOwner = GetOwner())
+			{
+				if (AGameBoard* GameBoard = Cast<AGameBoard>(ActorOwner))
+				{
+					GameBoard->ProcessDrop(IndexDestination, CurrentStatus);
 					ActiveTimers.Remove(TimerHandle);
 				}
 			}

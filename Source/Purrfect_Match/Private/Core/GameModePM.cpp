@@ -21,10 +21,57 @@ AGameModePM::AGameModePM()
 	DefaultPawnClass = APawnPlayerPM::StaticClass();
 }
 
+void AGameModePM::StartMatch()
+{
+	Super::StartMatch();
+	bool HasStarted = HasMatchStarted();
+	FName MatchStateStatus = GetMatchState();
+
+	if (UGameInstancePM* GameInstancePM = Cast<UGameInstancePM>(GetWorld()->GetGameInstance()))
+	{
+		ELevelStage LevelStage = GameInstancePM->GetLevelStage();
+		if (LevelStage == ELevelStage::LEVEL1_STORY)
+		{
+			LoadLevelGameBoard();
+		}
+	}
+	
+}
+
+void AGameModePM::EndMatch()
+{
+	FName MatchStateStatus1 = GetMatchState();
+	Super::EndMatch();
+	FName MatchStateStatus2 = GetMatchState();
+	FName MatchStateStatus3 = GetMatchState();
+}
+
 void AGameModePM::BeginPlay()
 {
 	Super::BeginPlay();
 	UE_LOGFMT(LogTemp, Warning, "GameModePM::BeginPlay()");
+
+	// if (AGameStatePM* GameStatePM = Cast<AGameStatePM>(GetWorld()->GetGameState()))
+	// {
+	// 	GameStatePM->GameStateRestartGameDelegate.AddUniqueDynamic(this, &AGameModePM::LoadLevelGameBoard);
+	// }
+}
+
+void AGameModePM::LoadLevelGameBoard()
+{
+	if (UGameInstancePM* GameInstancePM = Cast<UGameInstancePM>(GetWorld()->GetGameInstance()))
+	{
+		ELevelStage LevelStage = GameInstancePM->GetLevelStage();
+		if (AGameStatePM* GameStatePM = Cast<AGameStatePM>(GetWorld()->GetGameState()))
+		{
+			GameStatePM->GameModeLoadLevelBoardDelegate.Broadcast(LevelStage);
+		}
+	}
+	
+}
+
+void AGameModePM::DestroyLevelGameBoard()
+{
 }
 
 AActor* AGameModePM::ChoosePlayerStart_Implementation(AController* Player)
@@ -52,6 +99,8 @@ AActor* AGameModePM::ChoosePlayerStart_Implementation(AController* Player)
 	
 	return this;
 }
+
+
 
 void AGameModePM::InitStartSpot_Implementation(AActor* StartSpot, AController* NewPlayer)
 {

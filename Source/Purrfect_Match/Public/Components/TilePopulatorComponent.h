@@ -76,6 +76,9 @@ protected:
 public:
 
 	UFUNCTION(BlueprintCallable)
+	void SetLevel(int32 InLevel);
+
+	UFUNCTION(BlueprintCallable)
 	TArray<FGameplayTag> GenerateTileLine();
 
 	UFUNCTION()

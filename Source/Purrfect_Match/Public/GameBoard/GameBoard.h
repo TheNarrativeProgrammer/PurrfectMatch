@@ -11,6 +11,7 @@
 #include "Components/TileLineMatchProcessorComponent.h"
 #include "Data/TileStatus.h"
 #include "Components/TileComponent.h"
+
 #include "GameBoard.generated.h"
 
 
@@ -38,11 +39,12 @@
 // };
 
 
-
+enum ELevelStage : uint8;
 class UTileInfo;
 class UDelegateBindingCompGameBoard;
 class UTilePopulatorComponent;
 class UScoreComponent;
+class ULevelDataManagerComponent;
 
 UCLASS()
 class PURRFECT_MATCH_API AGameBoard : public AActor,
@@ -60,9 +62,23 @@ public:
 	virtual int32 GetBoardWidth_Implementation() override; 
 	virtual int32 GetBoardHeight_Implementation() override;
 
+	UFUNCTION(BlueprintCallable, Category = "GameBoard")
+	void OnLevelStarSetLevelStageAndtInitialze(ELevelStage InLevelStage);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UFUNCTION(BlueprintCallable, Category = "GameBoard")
+	void InitializeBoard();
+
+	UFUNCTION(BlueprintCallable, Category = "GameBoard")
+	void InitializeLevelProperties();
+
+	
+
+	UPROPERTY()
+	TEnumAsByte<ELevelStage> LevelStage;
 
 	UFUNCTION()
 	void SpawnPlane(int x, int y);
@@ -79,6 +95,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component")
 	TObjectPtr<UScoreComponent> ScoreComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component")
+	TObjectPtr<ULevelDataManagerComponent> LevelDataManagerComponent;
 
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component")
 	// TObjectPtr<UTilePopulatorComponent> TilePopulatorComponent;
@@ -191,8 +210,14 @@ public:
 	void SwitchTiles(int32 indexLeft, int32 indexRight);
 
 	UFUNCTION()
-	void ProcessSwitch(int32 IndexCurrent, FTileStatus DestinationStatus);
+	void DropPopulatedTilesAboveEmpty(int32 indexPopulated, int32 indexEmpty);
 
+	UFUNCTION()
+	void ProcessSwitch(int32 IndexCurrent, FTileStatus DestinationStatus, bool isSecondSwitch);
+
+	UFUNCTION()
+	void ProcessDrop(int32 IndexDestination, FTileStatus CurrentStatus);
+	
 	UFUNCTION()
 	void MoveTileRowsUpOneRow();
 
@@ -205,8 +230,17 @@ public:
 	UFUNCTION()
 	void PopulateRow(int32 ColumnIndex, TArray<FGameplayTag> GameplayTags);
 
+	UFUNCTION()
+	void SetTimeNewRowAdd(float InTimeNewRowAdd);
+
+	UFUNCTION()
+	void SetTotalAffectionNeeded(int32 InTotalAffectionNeeded);
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time")
 	float timeNewRowAdd = 10.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time")
+	int32 totalAffectionNeeded  = 200;
 
 	UFUNCTION()
 	void StartTimer();

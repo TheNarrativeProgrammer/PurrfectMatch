@@ -15,6 +15,8 @@ void UDelegateBindingCompGameBoard::BindDelegates()
 			GameStatePM->PawnPlayerRequestTileLocationDelegate.AddUniqueDynamic(GameBoardOwner, &AGameBoard::GetTileLocation);
 			GameStatePM->GameBoardSwitchTilesDelegate.AddUniqueDynamic(GameBoardOwner, &AGameBoard::SwitchTiles);
 			GameStatePM->GameStateRestartLevelDelegate.AddUniqueDynamic(GameBoardOwner, &AGameBoard::OnLevelRestarted);
+			//GameStatePM->GameStateRestartGameDelegate.AddUniqueDynamic(GameBoardOwner, &AGameBoard::OnLevelRestarted);
+			GameStatePM->GameModeLoadLevelBoardDelegate.AddUniqueDynamic(GameBoardOwner, &AGameBoard::OnLevelStarSetLevelStageAndtInitialze);
 		}
 	}
 }

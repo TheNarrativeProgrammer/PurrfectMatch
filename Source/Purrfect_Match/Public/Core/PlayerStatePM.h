@@ -17,12 +17,21 @@ class PURRFECT_MATCH_API APlayerStatePM : public APlayerState
 public:
 	APlayerStatePM();
 
-	protected:
+	virtual void BeginPlay() override;
+
+protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Lives")
 	int32 playerLivesRemaining = 9;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Lives")
 	int32 playerLivesDefaultAmount = 9;
+
+	UFUNCTION()
+	void ResetScoreToZero();
+
+	UFUNCTION()
+	void ResetLivesToDefault();
+
 
 
 public:

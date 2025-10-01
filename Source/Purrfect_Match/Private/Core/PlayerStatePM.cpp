@@ -11,6 +11,35 @@ APlayerStatePM::APlayerStatePM()
 {
 }
 
+void APlayerStatePM::BeginPlay()
+{
+	Super::BeginPlay();
+	if (AGameStatePM* GameStatePM = Cast<AGameStatePM>( UGameplayStatics::GetGameState(GetWorld())))
+	{
+		GameStatePM->GameStateRestartGameDelegate.AddUniqueDynamic(this, &APlayerStatePM::ResetScoreToZero);
+		GameStatePM->GameStateRestartGameDelegate.AddUniqueDynamic(this, &APlayerStatePM::ResetLivesToDefault);
+	}
+}
+
+void APlayerStatePM::ResetScoreToZero()
+{
+	SetScore(0);
+	if (AGameStatePM* GameStatePM = Cast<AGameStatePM>( UGameplayStatics::GetGameState(GetWorld())))
+	{
+		GameStatePM->PlayerStateScoreChangeDelegate.Broadcast(0, 0,0);
+	}
+	
+}
+
+void APlayerStatePM::ResetLivesToDefault()
+{
+	playerLivesRemaining = playerLivesDefaultAmount;
+	if (AGameStatePM* GameStatePM = Cast<AGameStatePM>(UGameplayStatics::GetGameState(GetWorld())))
+	{
+		GameStatePM->PlayerStateLiveChangeDelegate.Broadcast(playerLivesDefaultAmount, playerLivesRemaining, 9);
+	}
+}
+
 void APlayerStatePM::ChangeScore(float ScoreIncrumentAmount)
 {
 	float oldScore = GetScore();
