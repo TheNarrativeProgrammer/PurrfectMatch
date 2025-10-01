@@ -30,7 +30,7 @@ void AGameModePM::StartMatch()
 	if (UGameInstancePM* GameInstancePM = Cast<UGameInstancePM>(GetWorld()->GetGameInstance()))
 	{
 		ELevelStage LevelStage = GameInstancePM->GetLevelStage();
-		if (LevelStage == ELevelStage::LEVEL1_STORY)
+		if (LevelStage == ELevelStage::LEVEL1_GAMEPLAY)
 		{
 			LoadLevelGameBoard();
 		}

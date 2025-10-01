@@ -37,6 +37,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGameStateRestartGameSignature);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGameStateMatchEndSignature);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGameStateLevelCompletedSignature);
+
 //GameMode
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGameModeLoadLevelBoardSignature, ELevelStage, LevelStage);
 
@@ -87,6 +89,10 @@ public:
 
 	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "GameState Delegate")
 	FGameStateMatchEndSignature GameStateMatchEndDelegate;
+
+	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "GameState Delegate")
+	FGameStateLevelCompletedSignature GameStateLevelCompletedDelegate;
+	
 
 	//GameMode
 	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "GameState Delegate")

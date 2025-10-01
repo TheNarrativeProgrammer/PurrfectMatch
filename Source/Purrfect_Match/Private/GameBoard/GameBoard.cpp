@@ -86,6 +86,10 @@ void AGameBoard::InitializeLevelProperties()
 		SetTimeNewRowAdd(LevelData->TimeToSpawnNewRow);
 		ScoreComponent->SetTotalAffectionNeeded(LevelData->AffectionLevelMax);
 	}
+	else
+	{
+		UE_LOGFMT(LogTemp, Warning, "TilePopulatorComponent map is not set up correctly");
+	}
 	
 }
 
@@ -296,7 +300,6 @@ void AGameBoard::GameOverCheck(int32 TotalTiles, TArray<FTileStatus> TileStatuse
 	{
 		if (TileStatusesCopy[i].TileInfo && TileStatusesCopy[i].TileInfo->GameplayTag != GameplayTagEmptyTile)
 		{
-			GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Red, "Game Over FIRED");
 			UE_LOGFMT(LogTemp, Warning, "Game Over");
 			GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
 
@@ -318,6 +321,11 @@ void AGameBoard::GameOverCheck(int32 TotalTiles, TArray<FTileStatus> TileStatuse
 			return;
 		}
 	}
+}
+
+void AGameBoard::OnLevelCompletedStopBoard()
+{
+	GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
 }
 
 void AGameBoard::PopulateRow(int32 ColumnIndex, TArray<FGameplayTag> GameplayTags)

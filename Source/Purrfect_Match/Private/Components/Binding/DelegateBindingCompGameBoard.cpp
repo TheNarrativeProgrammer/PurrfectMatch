@@ -17,6 +17,7 @@ void UDelegateBindingCompGameBoard::BindDelegates()
 			GameStatePM->GameStateRestartLevelDelegate.AddUniqueDynamic(GameBoardOwner, &AGameBoard::OnLevelRestarted);
 			//GameStatePM->GameStateRestartGameDelegate.AddUniqueDynamic(GameBoardOwner, &AGameBoard::OnLevelRestarted);
 			GameStatePM->GameModeLoadLevelBoardDelegate.AddUniqueDynamic(GameBoardOwner, &AGameBoard::OnLevelStarSetLevelStageAndtInitialze);
+			GameStatePM->GameStateLevelCompletedDelegate.AddUniqueDynamic(GameBoardOwner, &AGameBoard::OnLevelCompletedStopBoard);
 		}
 	}
 }

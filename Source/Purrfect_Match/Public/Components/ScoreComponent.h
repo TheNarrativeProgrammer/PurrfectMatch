@@ -15,9 +15,7 @@ class PURRFECT_MATCH_API UScoreComponent : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UScoreComponent();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Score")
-	int32 score = 0;
+	
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time")
 	int32 totalAffectionNeeded  = 200;

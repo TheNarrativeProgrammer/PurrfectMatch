@@ -14,6 +14,7 @@ APlayerStatePM::APlayerStatePM()
 void APlayerStatePM::BeginPlay()
 {
 	Super::BeginPlay();
+	SetScore(0);
 	if (AGameStatePM* GameStatePM = Cast<AGameStatePM>( UGameplayStatics::GetGameState(GetWorld())))
 	{
 		GameStatePM->GameStateRestartGameDelegate.AddUniqueDynamic(this, &APlayerStatePM::ResetScoreToZero);

@@ -227,6 +227,9 @@ public:
 	UFUNCTION()
 	void GameOverCheck(int32 TotalTiles, TArray<FTileStatus> TileStatusesCopy);
 
+	UFUNCTION(BlueprintCallable)
+	void OnLevelCompletedStopBoard();
+
 	UFUNCTION()
 	void PopulateRow(int32 ColumnIndex, TArray<FGameplayTag> GameplayTags);
 
