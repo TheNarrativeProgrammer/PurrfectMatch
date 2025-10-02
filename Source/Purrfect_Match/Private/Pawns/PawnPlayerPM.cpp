@@ -4,6 +4,7 @@
 #include "Pawns/PawnPlayerPM.h"
 
 #include "EnhancedInputSubsystems.h"
+#include "Blueprint/UserWidget.h"
 #include "GameFramework/FloatingPawnMovement.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/Binding/DelegateBindingCompPlayerPawn.h"
@@ -124,6 +125,53 @@ void APawnPlayerPM::SwitchTiles(const FInputActionValue& InputActionValue)
 	DelegateBindingCompPlayerPawn->GameStatePM->GameBoardSwitchTilesDelegate.Broadcast(indexLeft, indexRight);
 }
 
+void APawnPlayerPM::ExitGame(const FInputActionValue& InputActionValue)
+{
+	UUserWidget* WidgetPauseMenu = nullptr;
+	if (isPaused == false)
+	{
+		
+		if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+		{
+			SetIsPaused(true);
+			if (WidgetClassPauseMenu)
+			{
+				WidgetPauseMenu = CreateWidget<UUserWidget>(PlayerController, WidgetClassPauseMenu);
+				if (WidgetPauseMenu != nullptr)
+				{
+					WidgetPauseMenu->AddToViewport(1);
+
+					PlayerController->bShowMouseCursor = true;
+
+					 FInputModeGameAndUI InputModeUIGame;
+					PlayerController->SetInputMode(InputModeUIGame);
+				}
+			}
+		}
+	}
+	else
+	{
+		
+		if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+		{
+			SetIsPaused(false);
+			if (WidgetPauseMenu != nullptr)
+			{
+				//WidgetPauseMenu->RemoveFromViewport();
+				WidgetPauseMenu->RemoveFromParent();
+				WidgetPauseMenu = nullptr;
+			}
+
+			// FInputModeGameOnly InputModeGameOnly;
+			// PlayerController->SetInputMode(InputModeGameOnly);
+			PlayerController->bShowMouseCursor = false;
+		}
+	}
+		
+}
+
+
+
 // Called every frame
 void APawnPlayerPM::Tick(float DeltaTime)
 {
@@ -165,6 +213,10 @@ void APawnPlayerPM::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 						{
 							EnhancedInputComponent->BindAction(IASwitchTiles, ETriggerEvent::Triggered, this, &APawnPlayerPM::SwitchTiles);
 						}
+						if (IsValid(IAExitGame))
+						{
+							EnhancedInputComponent->BindAction(IAExitGame, ETriggerEvent::Triggered, this, &APawnPlayerPM::ExitGame);
+						}
 					}
 				}
 			}
@@ -188,6 +240,15 @@ void APawnPlayerPM::SetBoardWithAndHeight(int32 InBoardWidth, int32 InHeight)
 	boardHeight = InHeight;
 	lastIndex = (boardHeight * boardWidth) - 1;
 	firstIndexOfLastRow = lastIndex - boardWidth + 1;
+}
+
+void APawnPlayerPM::SetIsPaused(bool InIsPaused)
+{
+	isPaused = InIsPaused;
+	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	{
+		PlayerController->SetPause(InIsPaused);
+	}
 }
 
 

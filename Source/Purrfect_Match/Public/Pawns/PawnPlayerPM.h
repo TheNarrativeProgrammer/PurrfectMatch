@@ -63,6 +63,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Input|Actions")
 	TObjectPtr<UInputAction> IASwitchTiles;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Input|Actions")
+	TObjectPtr<UInputAction> IAExitGame;
+
 	UFUNCTION()
 	void MoveHorizontal(const FInputActionValue& InputActionValue);
 
@@ -71,6 +74,19 @@ protected:
 
 	UFUNCTION()
 	void SwitchTiles(const FInputActionValue& InputActionValue);
+
+	UFUNCTION()
+	void ExitGame(const FInputActionValue& InputActionValue);
+	
+
+	UPROPERTY()
+	bool isPaused = false;
+
+	
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="widgets")
+	TSubclassOf<UUserWidget> WidgetClassPauseMenu;
+
 	
 
 public:	
@@ -97,6 +113,9 @@ public:
 
 	UFUNCTION()
 	void SetBoardWithAndHeight(int32 InBoardWidth, int32 InHeight);
+
+	UFUNCTION(blueprintCallable)
+	void SetIsPaused(bool InIsPaused);
 
 	
 
