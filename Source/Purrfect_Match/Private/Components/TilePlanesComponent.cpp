@@ -206,20 +206,57 @@ void UTilePlanesComponent::ChangeAppearanceOfPlaneToMimicEmpty(int32 Index)
 	}
 }
 
+void UTilePlanesComponent::StopAllTimers()
+{
+	for (int32 i = 0; i < ActiveTimers.Num(); i++)
+	{
+		if (ActiveTimers[i].IsValid())
+		{
+			GetWorld()->GetTimerManager().ClearTimer(ActiveTimers[i]);
+		}
+		
+	}
+}
+
+void UTilePlanesComponent::DestroyStaticMeshesPendingDestruction()
+{
+	if (StaticMeshComponentsPendingDestuction.IsEmpty())
+	{
+		return;
+	}
+
+	int32 index = StaticMeshComponentsPendingDestuction.Num() -1;
+	for (int32 i = index; i >= 0; i--)
+	{
+		UStaticMeshComponent* StaticMeshComponent = StaticMeshComponentsPendingDestuction[i];
+		if (StaticMeshComponent != nullptr)
+		{
+			StaticMeshComponent->DestroyComponent();
+		}
+		
+	}
+}
+
 void UTilePlanesComponent::DestroyMovePlane(UStaticMeshComponent* StaticMeshComponent, float DestroyAfterDuration)
 {
 	if (!StaticMeshComponent) return;
 	
 	FTimerHandle TimerHandle;
-    
+	StaticMeshComponentsPendingDestuction.Add(StaticMeshComponent);
+	
 	GetWorld()->GetTimerManager().SetTimer(
 		TimerHandle,
 		[this, StaticMeshComponent, TimerHandle]()
 		{
 			if (StaticMeshComponent)
 			{
-				StaticMeshComponent->DestroyComponent();
-				ActiveTimers.Remove(TimerHandle);
+				if (StaticMeshComponent != nullptr)
+				{
+					StaticMeshComponentsPendingDestuction.Remove(StaticMeshComponent);
+					StaticMeshComponent->DestroyComponent();
+					ActiveTimers.Remove(TimerHandle);
+				}
+				
 			}
 		},
 		DestroyAfterDuration,  // Delay per component
@@ -241,7 +278,11 @@ void UTilePlanesComponent::OnSwitchCompleteProcessSwitch(int32 IndexCurrent, FTi
 				if (AGameBoard* GameBoard = Cast<AGameBoard>(ActorOwner))
 				{
 					GameBoard->ProcessSwitch(IndexCurrent, DestinationStatus, isSecondSwitch);
-					ActiveTimers.Remove(TimerHandle);
+					if (TimerHandle.IsValid())
+					{
+						ActiveTimers.Remove(TimerHandle);
+					}
+					
 				}
 			}
 		},

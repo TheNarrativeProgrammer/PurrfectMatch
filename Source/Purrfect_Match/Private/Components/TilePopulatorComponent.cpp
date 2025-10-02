@@ -106,11 +106,12 @@ FGameplayTag UTilePopulatorComponent::GetTileTag(int32 tileIconNumber)
 		{
 			if (level == 1)
 			{
-				return TagGoalBath;
+				return TagGoalPet;
 			}
 			else if (level == 2)
 			{
-				return TagGoalPet;
+				return TagGoalBath;
+				
 			}
 			else if (level == 3)
 			{

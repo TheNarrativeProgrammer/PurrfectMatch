@@ -62,6 +62,12 @@ public:
 	UFUNCTION()
 	void ChangeAppearanceOfPlaneToMimicEmpty(int32 Index);
 
+	UFUNCTION(BlueprintCallable)
+	void StopAllTimers();
+
+	UFUNCTION(BlueprintCallable)
+	void DestroyStaticMeshesPendingDestruction();
+
 	UFUNCTION()
 	void DestroyMovePlane(UStaticMeshComponent* StaticMeshComponent, float DestroyAfterDuration);
 
@@ -86,6 +92,9 @@ public:
 
 	UPROPERTY()
 	TArray<FTimerHandle> ActiveTimers;
+
+	UPROPERTY()
+	TArray<UStaticMeshComponent*> StaticMeshComponentsPendingDestuction;
 
 	UFUNCTION()
 	void AssignTileImageToMovePlane(int32 Index, UStaticMeshComponent* StaticMeshComponent);

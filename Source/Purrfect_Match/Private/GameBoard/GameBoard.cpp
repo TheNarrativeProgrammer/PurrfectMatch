@@ -95,6 +95,10 @@ void AGameBoard::InitializeLevelProperties()
 
 void AGameBoard::OnLevelStarSetLevelStageAndtInitialze(ELevelStage InLevelStage)
 {
+	if (APlayerStatePM* PlayerStatePM = Cast<APlayerStatePM>(UGameplayStatics::GetPlayerState(GetWorld(),0)))
+	{
+		PlayerStatePM->ResetScoreToZero();
+	}
 	LevelStage = InLevelStage;
 	InitializeLevelProperties();
 	TileComponent->TilePlanesComponent->DestroyPlanes();
@@ -129,6 +133,10 @@ FVector AGameBoard::GetTileLocationByXandY(int32 xValue, int32 yValue)
 
 void AGameBoard::OnLevelRestarted()
 {
+	if (APlayerStatePM* PlayerStatePM = Cast<APlayerStatePM>(UGameplayStatics::GetPlayerState(GetWorld(),0)))
+	{
+		PlayerStatePM->ResetScoreToZero();
+	}
 	ClearBoardData();
 	PopulateBoard();
 }
@@ -306,7 +314,7 @@ void AGameBoard::GameOverCheck(int32 TotalTiles, TArray<FTileStatus> TileStatuse
 			if (APlayerStatePM* PlayerStatePM = Cast<APlayerStatePM>( UGameplayStatics::GetPlayerState(GetWorld(), 0)))
 			{
 				int32 livesRemaining = PlayerStatePM->GetPlayerLivesRemaining();
-				if (livesRemaining <= 9)
+				if (livesRemaining <= 0)
 				{
 					if (AGameMode* GameMode = Cast<AGameMode>( UGameplayStatics::GetGameMode(GetWorld())))
 					{
@@ -326,6 +334,8 @@ void AGameBoard::GameOverCheck(int32 TotalTiles, TArray<FTileStatus> TileStatuse
 void AGameBoard::OnLevelCompletedStopBoard()
 {
 	GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+	TileComponent->TilePlanesComponent->StopAllTimers();
+	TileComponent->TilePlanesComponent->DestroyStaticMeshesPendingDestruction();
 }
 
 void AGameBoard::PopulateRow(int32 ColumnIndex, TArray<FGameplayTag> GameplayTags)

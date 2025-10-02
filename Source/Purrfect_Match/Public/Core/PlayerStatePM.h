@@ -26,8 +26,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Lives")
 	int32 playerLivesDefaultAmount = 9;
 
-	UFUNCTION()
-	void ResetScoreToZero();
+	
 
 	UFUNCTION()
 	void ResetLivesToDefault();
@@ -35,6 +34,9 @@ protected:
 
 
 public:
+
+	UFUNCTION()
+	void ResetScoreToZero();
 	
 	UFUNCTION(BlueprintCallable, Category = "Score")
 	void ChangeScore(float ScoreIncrumentAmount);
