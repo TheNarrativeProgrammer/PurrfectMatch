@@ -83,11 +83,7 @@ public:
 
 	UFUNCTION()
 	UStaticMeshComponent* SpawnMovementPlane(FTransform TransformForSpawn);
-
-	// UPROPERTY()
-	// TObjectPtr<UStaticMeshComponent> MoveStaticMeshComponent;
 	
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time of Plane Destruction")
 	float movePlaneDuration = 0.5f;
 
@@ -102,6 +98,26 @@ public:
 
 	UFUNCTION()
 	void AssignTileImageToMovePlane(int32 Index, UStaticMeshComponent* StaticMeshComponent);
+
+
+	//pool
+	UPROPERTY()
+	TArray<UStaticMeshComponent*> StaticMeshComponentPoolAll;
+
+	UPROPERTY()
+	TArray<UStaticMeshComponent*> StaticMeshComponentPoolAvailable;
+
+	UFUNCTION()
+	void PreWarmPool(int32 PoolCount);
+
+	UFUNCTION()
+	UStaticMeshComponent* GetComponentFromPool(const FTransform& SpawnTransform);
+
+	UFUNCTION()
+	void ReturnComponentToPool(UStaticMeshComponent* Component);
+
+	UFUNCTION()
+	void EmptyPool();
 
 protected:
 	// Called when the game starts

@@ -53,6 +53,9 @@ int32 AGameBoard::GetBoardHeight_Implementation()
 void AGameBoard::BeginPlay()
 {
 	Super::BeginPlay();
+	int32 poolCount = width * height;
+	TileComponent->TilePlanesComponent->PreWarmPool(poolCount);
+	
 }
 
 void AGameBoard::InitializeBoard()

@@ -57,10 +57,10 @@ protected:
 	UPROPERTY()
 	FGameplayTag TagGoalDog;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tile Spawn Settings")
 	float chanceOfGoalTile = 0.2f;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tile Spawn Settings")
 	int32 numberOfRowsAtLevelStart = 3;
 
 	

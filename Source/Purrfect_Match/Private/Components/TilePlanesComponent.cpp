@@ -8,6 +8,7 @@
 #include "Core/GameStatePM.h"
 #include "GameBoard/GameBoard.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Misc/MapErrors.h"
 
 // Sets default values for this component's properties
 UTilePlanesComponent::UTilePlanesComponent()
@@ -27,6 +28,7 @@ void UTilePlanesComponent::InitializeComponent()
 	if (AGameStatePM* GameStatePM = Cast<AGameStatePM>(GetWorld()->GetGameState()))
 	{
 		GameStatePM->OnContinueClickedClearTimerDelegate.AddUniqueDynamic(this, &UTilePlanesComponent::StopAllTimers);
+		
 	}
 }
 
@@ -37,7 +39,8 @@ void UTilePlanesComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		World->GetTimerManager().ClearAllTimersForObject(this);
 	}
 	ActiveTimers.Empty();
-	StaticMeshComponentsPendingDestuction.Empty();
+	//StaticMeshComponentsPendingDestuction.Empty();
+	EmptyPool();
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -315,8 +318,9 @@ void UTilePlanesComponent::DestroyMovePlane(UStaticMeshComponent* StaticMeshComp
 
 		if (UStaticMeshComponent* StaticMesh = WeakMesh.Get())
 		{
-			TilePlanesComponentSelf->StaticMeshComponentsPendingDestuction.Remove(StaticMesh);
-			StaticMesh->DestroyComponent();
+			TilePlanesComponentSelf->StaticMeshComponentsPendingDestuction.RemoveSingleSwap(StaticMesh);
+			TilePlanesComponentSelf->ReturnComponentToPool(StaticMesh);
+			//StaticMesh->DestroyComponent();
 		}
 		
 	});
@@ -386,11 +390,22 @@ void UTilePlanesComponent::OnDropCompleteProcessDrop(int32 IndexDestination, FTi
 
 UStaticMeshComponent* UTilePlanesComponent::SpawnMovementPlane(FTransform TransformForSpawn)
 {
+	FTransform Transform;
+	FVector Location = TransformForSpawn.GetLocation() + FVector(0, -10.0f, 0);
+	Transform.SetLocation(Location);
+	
+	//try getting component from pool
+	if (UStaticMeshComponent* PooledComponent = GetComponentFromPool(TransformForSpawn))
+	{
+		PooledComponent->SetWorldRotation(FRotator(0, 0, -90.0f));
+		PooledComponent->SetRelativeLocation(Transform.GetLocation());
+		return PooledComponent;
+	}
+
+	//if no pooled actor exists, then create one
 	if (AActor* ActorOwner = Cast<AActor>(GetOwner()))
 	{
-		FTransform Transform;
-		FVector Location = TransformForSpawn.GetLocation() + FVector(0, -10.0f, 0);
-		Transform.SetLocation(Location);
+		
 		
 		if (UActorComponent* ActorComponent = ActorOwner->AddComponentByClass(UStaticMeshComponent::StaticClass(), false, Transform, false))
 		{
@@ -438,6 +453,111 @@ void UTilePlanesComponent::AssignTileImageToMovePlane(int32 Index, UStaticMeshCo
 	}
 }
 
+
+void UTilePlanesComponent::PreWarmPool(int32 PoolCount)
+{
+	if (PoolCount <= 0) return;
+
+	if (AActor* ActorOwner = Cast<AActor>(GetOwner()))
+	{
+		for (int32 i = 0; i < PoolCount; i++)
+		{
+			UActorComponent* ActorComponent =  ActorOwner->AddComponentByClass(UStaticMeshComponent::StaticClass(), false, FTransform::Identity, false);
+			if (UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(ActorComponent))
+			{
+				StaticMeshComponent->SetWorldRotation(FRotator(0.0f, 00.0f, -90.0f));
+				if (PlaneMesh)
+				{
+					StaticMeshComponent->SetStaticMesh(PlaneMesh);
+				}
+
+				if (!StaticMeshComponent->IsRegistered())
+				{
+					StaticMeshComponent->RegisterComponent();
+				}
+
+				StaticMeshComponent->SetupAttachment(ActorOwner->GetRootComponent());
+
+				if (BoardTileMaterial)
+				{
+					StaticMeshComponent->SetMaterial(0, BoardTileMaterial);
+				}
+
+				StaticMeshComponent->SetVisibility(false);
+				StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+				StaticMeshComponentPoolAll.Add(StaticMeshComponent);
+				StaticMeshComponentPoolAvailable.Add(StaticMeshComponent);
+			}
+		}
+	}
+}
+
+UStaticMeshComponent* UTilePlanesComponent::GetComponentFromPool(const FTransform& SpawnTransform)
+{
+	if (StaticMeshComponentPoolAvailable.Num() == 0)
+	{
+		return nullptr;
+	}
+
+	//pop last avaialble
+	UStaticMeshComponent* Component = StaticMeshComponentPoolAvailable.Pop();
+	if (!Component) return nullptr;
+
+	if (AActor* ActorOwner = Cast<AActor>(GetOwner()))
+	{
+		//Component->SetWorldTransform(SpawnTransform);
+		Component->SetVisibility(true);
+		Component->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		//Component->SetupAttachment(ActorOwner->GetRootComponent());
+
+		// if (!Component->IsRegistered())
+		// {
+		// 	Component->RegisterComponent();
+		// }
+		//
+		// StaticMeshComponentsPendingDestuction.AddUnique(Component);
+	}
+	return Component;
+}
+
+void UTilePlanesComponent::ReturnComponentToPool(UStaticMeshComponent* Component)
+{
+	if (!Component) return;
+
+	if (!StaticMeshComponentPoolAll.Contains(Component))
+	{
+		Component->DestroyComponent();
+		return;
+	}
+
+	Component->SetVisibility(false);
+	Component->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Component->SetRelativeLocation(FVector(0.0f, 0.0f, -10000.0f));
+
+	StaticMeshComponentsPendingDestuction.RemoveSingleSwap(Component);
+
+	if (!StaticMeshComponentPoolAvailable.Contains(Component))
+	{
+		StaticMeshComponentPoolAvailable.Add(Component);
+	}
+}
+
+void UTilePlanesComponent::EmptyPool()
+{
+	for (UStaticMeshComponent* Component : StaticMeshComponentPoolAll)
+	{
+		Component->DestroyComponent();
+	}
+	StaticMeshComponentPoolAll.Empty();
+
+	for (UStaticMeshComponent* Component : StaticMeshComponentPoolAvailable)
+	{
+		Component->DestroyComponent();
+	}
+	StaticMeshComponentPoolAvailable.Empty();
+}
 
 // Called when the game starts
 void UTilePlanesComponent::BeginPlay()
