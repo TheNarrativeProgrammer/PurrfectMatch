@@ -87,10 +87,6 @@ void UTileLineMatchProcessorComponent::ProcessPoints(FGameplayTag GameplayTag, i
 		if (UScoreComponent* ScoreComponent = ActorOwner->GetComponentByClass<UScoreComponent>())
 		{
 			ScoreComponent->UpdateScore(pointsScored, GameplayTag);
-			if (GameplayTag.IsValid() && GameplayTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Affection"))))
-			{
-				//GEngine->AddOnScreenDebugMessage(0, 2.0f, FColor::Red, "ProcessPoints");
-			}
 		}
 	}
 }

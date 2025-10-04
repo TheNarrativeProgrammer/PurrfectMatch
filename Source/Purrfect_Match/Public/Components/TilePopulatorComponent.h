@@ -61,6 +61,12 @@ protected:
 	float chanceOfGoalTile = 0.2f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tile Spawn Settings")
+	float chanceOfGoalTileDefault = 0.2f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tile Spawn Settings")
+	float chanceOfGoalTileAfterAffectionMax = 0.2f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tile Spawn Settings")
 	int32 numberOfRowsAtLevelStart = 3;
 
 	
@@ -80,6 +86,12 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetLevel(int32 InLevel);
+
+	UFUNCTION(BlueprintCallable)
+	void OnAffectionFullChangeChanceOfGoalTile();
+
+	UFUNCTION(BlueprintCallable)
+	void OnLevelStartRevertChanceOfGoalTileToDefault();
 
 	UFUNCTION(BlueprintCallable)
 	TArray<FGameplayTag> GenerateTileLine();

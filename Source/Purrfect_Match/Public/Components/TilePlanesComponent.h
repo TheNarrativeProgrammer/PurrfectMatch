@@ -85,7 +85,7 @@ public:
 	UStaticMeshComponent* SpawnMovementPlane(FTransform TransformForSpawn);
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time of movement")
-	float movePlaneDuration = 0.5f;
+	float movePlaneDuration = 0.15f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time of movement")
 	float ScorePlaneDuration = 0.4f;
@@ -93,6 +93,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time of movement")
 	float SwitchDuration = 0.4f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time of movement")
+	int32 GameBoardWidth = 8;
+	
 	UPROPERTY()
 	TArray<FTimerHandle> ActiveTimers;
 
@@ -101,6 +104,9 @@ public:
 
 	UFUNCTION()
 	void AssignTileImageToMovePlane(int32 Index, UStaticMeshComponent* StaticMeshComponent);
+
+	UFUNCTION()
+	void SetGameBoardWidth(int32 width);
 
 
 	//pool
@@ -134,3 +140,5 @@ public:
 
 		
 };
+
+

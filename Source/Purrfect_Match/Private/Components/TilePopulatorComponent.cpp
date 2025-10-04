@@ -130,6 +130,16 @@ void UTilePopulatorComponent::SetLevel(int32 InLevel)
 	level = InLevel;
 }
 
+void UTilePopulatorComponent::OnAffectionFullChangeChanceOfGoalTile()
+{
+	chanceOfGoalTile = chanceOfGoalTileAfterAffectionMax;
+}
+
+void UTilePopulatorComponent::OnLevelStartRevertChanceOfGoalTileToDefault()
+{
+	chanceOfGoalTile = chanceOfGoalTileDefault;
+}
+
 void UTilePopulatorComponent::PopulateBoardWithInitialTiles()
 {
 	for (int i = 0; i < numberOfRowsAtLevelStart; i++)

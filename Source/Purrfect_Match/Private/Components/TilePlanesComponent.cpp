@@ -179,11 +179,13 @@ void UTilePlanesComponent::SpawnPlaneAndDrop(int32 IndexCurrent, int32 IndexDest
 	LatentInfoDestination.Linkage = 0;
 	LatentInfoDestination.ExecutionFunction = NAME_None;
 
-	UKismetSystemLibrary::MoveComponentTo(MoveStaticMeshComponent,TransformDesination.GetLocation(), TransformDesination.Rotator(),
-		false, false, movePlaneDuration, false, EMoveComponentAction::Move, LatentInfoDestination);
+	float movePlaneDurationScaled = movePlaneDuration * (FMath::Abs(IndexCurrent - IndexDestination)) / GameBoardWidth;
 
-	DestroyMovePlane(MoveStaticMeshComponent, movePlaneDuration + 0.1f);
-	OnDropCompleteProcessDrop(IndexDestination, CurrentPopulatedStatus, movePlaneDuration + 0.1f);
+	UKismetSystemLibrary::MoveComponentTo(MoveStaticMeshComponent,TransformDesination.GetLocation(), TransformDesination.Rotator(),
+		false, false, movePlaneDurationScaled, false, EMoveComponentAction::Move, LatentInfoDestination);
+
+	DestroyMovePlane(MoveStaticMeshComponent, movePlaneDurationScaled + 0.1f);
+	OnDropCompleteProcessDrop(IndexDestination, CurrentPopulatedStatus, movePlaneDurationScaled + 0.1f);
 }
 
 void UTilePlanesComponent::SpawnScoreMaterialPlane(int32 IndexOfMatch, FGameplayTag GameplayTag)
@@ -431,6 +433,10 @@ UStaticMeshComponent* UTilePlanesComponent::SpawnMovementPlane(FTransform Transf
 }
 
 
+void UTilePlanesComponent::SetGameBoardWidth(int32 width)
+{
+	GameBoardWidth = width;
+}
 
 void UTilePlanesComponent::AssignTileImageToMovePlane(int32 Index, UStaticMeshComponent* StaticMeshComponent)
 {

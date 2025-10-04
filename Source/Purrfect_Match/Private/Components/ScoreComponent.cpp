@@ -4,8 +4,10 @@
 #include "Components/ScoreComponent.h"
 
 #include "GameplayTagContainer.h"
+#include "Components/TilePopulatorComponent.h"
 #include "Core/GameStatePM.h"
 #include "Core/PlayerStatePM.h"
+#include "GameBoard/GameBoard.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values for this component's properties
@@ -44,6 +46,18 @@ void UScoreComponent::UpdateScore(int32 pointsScored, FGameplayTag GameplayTag)
 			{
 				signedPointsScored = pointsScored;
 
+				if (isChanceOfGoalTileUpdated == false)
+				{
+					SetIsChanceOfGoalTileUpdated(true);
+					if (AGameBoard* GameBoard = Cast<AGameBoard>(GetOwner()))
+					{
+						if (UTileComponent* TileComponent = GameBoard->GetComponentByClass<UTileComponent>())
+						{
+							TileComponent->TilePopulatorComponent->OnAffectionFullChangeChanceOfGoalTile();
+						}
+					}
+				}
+
 				if (GameplayTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Goal"))))
 				{
 					signedPointsScored = pointsScored;
@@ -63,6 +77,11 @@ void UScoreComponent::UpdateScore(int32 pointsScored, FGameplayTag GameplayTag)
 void UScoreComponent::SetTotalAffectionNeeded(int32 InTotalAffectionNeeded)
 {
 	totalAffectionNeeded = InTotalAffectionNeeded;
+}
+
+void UScoreComponent::SetIsChanceOfGoalTileUpdated(bool InIsChangeOfGoalTileUpdated)
+{
+	isChanceOfGoalTileUpdated = InIsChangeOfGoalTileUpdated;
 }
 
 // Called when the game starts

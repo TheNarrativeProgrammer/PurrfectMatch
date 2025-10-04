@@ -54,7 +54,11 @@ void AGameBoard::BeginPlay()
 {
 	Super::BeginPlay();
 	int32 poolCount = width * height;
+
+	if (!TileComponent || !TileComponent->TilePlanesComponent) return;
+		
 	TileComponent->TilePlanesComponent->PreWarmPool(poolCount);
+	TileComponent->TilePlanesComponent->SetGameBoardWidth(width);
 	
 }
 
@@ -104,6 +108,10 @@ void AGameBoard::OnLevelStarSetLevelStageAndtInitialze(ELevelStage InLevelStage)
 	}
 	LevelStage = InLevelStage;
 	InitializeLevelProperties();
+	
+	if (!TileComponent || !TileComponent->TilePopulatorComponent || !TileComponent->TilePlanesComponent) return;
+
+	TileComponent->TilePopulatorComponent->OnLevelStartRevertChanceOfGoalTileToDefault();
 	TileComponent->TilePlanesComponent->DestroyPlanes();
 	InitializeBoard();
 }
@@ -294,6 +302,26 @@ void AGameBoard::MoveTileRowsUpOneRow()
 		TileComponent->TileInfoManagerComponent->ChangeTileStatus(i, TileStatus);
 		TileComponent->TilePlanesComponent->ChangeTileImage(i, TileStatus);
 	}
+
+	//Process Matches after all the tiles have completed their move
+	if (float movePlaneDuration = TileComponent->TilePlanesComponent->movePlaneDuration)
+	{
+		TWeakObjectPtr<AGameBoard> WeakThis(this);
+	
+		UWorld* World = GetWorld();
+		if (!World) return;
+
+		FTimerHandle TimerHandleMatches;
+		FTimerDelegate TimerDelegateMatches = FTimerDelegate::CreateLambda([WeakThis]
+		{
+			UE_LOG(LogTemp, Warning, TEXT("MoveTileRowsUpOneRow fired. WeakThis validity is : %d"), WeakThis.IsValid());
+			WeakThis->ProcessMatches();
+		});
+		World->GetTimerManager().SetTimer(TimerHandleMatches, TimerDelegateMatches, movePlaneDuration + 0.35f, false);
+	}
+
+	
+	
 }
 
 void AGameBoard::ProcessMatches()

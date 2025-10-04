@@ -26,11 +26,17 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Points")
 	int32 pointsPerMatch = 5;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Tracking bool")
+	bool isChanceOfGoalTileUpdated = false;
+
 	UFUNCTION(BlueprintCallable)
 	void UpdateScore(int32 pointsScored, FGameplayTag GameplayTag);
 
 	UFUNCTION()
 	void SetTotalAffectionNeeded(int32 InTotalAffectionNeeded);
+
+	UFUNCTION()
+	void SetIsChanceOfGoalTileUpdated(bool InIsChangeOfGoalTileUpdated);
 
 protected:
 	// Called when the game starts
