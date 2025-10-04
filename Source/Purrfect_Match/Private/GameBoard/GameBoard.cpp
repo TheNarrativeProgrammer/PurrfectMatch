@@ -262,6 +262,8 @@ void AGameBoard::ProcessDrop(int32 IndexDestination, FTileStatus CurrentStatus)
 
 void AGameBoard::MoveTileRowsUpOneRow()
 {
+	FTileStatus EmptyStatus;
+	EmptyStatus.TileInfo = TileComponent->TileInfoManagerComponent->TileInfoEmpty;
 
 	TArray<FTileStatus> TileStatusesCopy = TileComponent->TileInfoManagerComponent->TileStatuses;
 	int32 TotalTiles = TileComponent->TilePlanesComponent->BoardTiles.Num();
@@ -271,8 +273,14 @@ void AGameBoard::MoveTileRowsUpOneRow()
 	//move rows up. 
 	for (int32 i = TotalTiles -1; i >= width; i--)
 	{
-		TileComponent->TileInfoManagerComponent->ChangeTileStatus(i,TileStatusesCopy[i-width]);
-		TileComponent->TilePlanesComponent->ChangeTileImage(i, TileStatusesCopy[i-width]);
+		FTileStatus PopulatedStatus = TileComponent->TileInfoManagerComponent->TileStatuses[i - width];
+		if (PopulatedStatus.TileInfo->GameplayTag == GameplayTagEmptyTile)
+		{
+			continue;
+		}
+		TileComponent->TilePlanesComponent->SpawnPlaneAndDrop(i-width, i, PopulatedStatus);
+		TileComponent->TileInfoManagerComponent->ChangeTileStatus(i,TileStatusesCopy[i - width]);
+		TileComponent->TilePlanesComponent->ChangeTileImage(i, EmptyStatus);
 	}
 
 	//clear bottom row
@@ -334,8 +342,6 @@ void AGameBoard::GameOverCheck(int32 TotalTiles, TArray<FTileStatus> TileStatuse
 void AGameBoard::OnLevelCompletedStopBoard()
 {
 	GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
-	TileComponent->TilePlanesComponent->StopAllTimers();
-	TileComponent->TilePlanesComponent->DestroyStaticMeshesPendingDestruction();
 }
 
 void AGameBoard::PopulateRow(int32 ColumnIndex, TArray<FGameplayTag> GameplayTags)

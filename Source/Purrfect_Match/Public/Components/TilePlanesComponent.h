@@ -17,6 +17,10 @@ public:
 	// Sets default values for this component's properties
 	UTilePlanesComponent();
 
+	virtual void InitializeComponent() override;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Board")
 	TArray<UStaticMeshComponent*> BoardTiles;
 

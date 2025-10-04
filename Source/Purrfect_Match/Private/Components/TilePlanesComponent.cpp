@@ -5,6 +5,7 @@
 
 #include "NaniteSceneProxy.h"
 #include "Components/TileInfoManagerComponent.h"
+#include "Core/GameStatePM.h"
 #include "GameBoard/GameBoard.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -14,8 +15,30 @@ UTilePlanesComponent::UTilePlanesComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
+	bWantsInitializeComponent = true;
 
 	// ...
+}
+
+void UTilePlanesComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+
+	if (AGameStatePM* GameStatePM = Cast<AGameStatePM>(GetWorld()->GetGameState()))
+	{
+		GameStatePM->OnContinueClickedClearTimerDelegate.AddUniqueDynamic(this, &UTilePlanesComponent::StopAllTimers);
+	}
+}
+
+void UTilePlanesComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (UWorld* World =  GetWorld())
+	{
+		World->GetTimerManager().ClearAllTimersForObject(this);
+	}
+	ActiveTimers.Empty();
+	StaticMeshComponentsPendingDestuction.Empty();
+	Super::EndPlay(EndPlayReason);
 }
 
 
@@ -49,7 +72,10 @@ void UTilePlanesComponent::SpawnPlaneAtLocation(FVector PlaneSpawnLocation)
 			{
 				StaticMeshComponent->SetStaticMesh(PlaneMesh);
 			}
-			StaticMeshComponent->RegisterComponent();
+			if (StaticMeshComponent->IsRegistered() == false)
+			{
+				StaticMeshComponent->RegisterComponent();
+			}
 			if (BoardTileMaterial)
 			{
 				StaticMeshComponent->SetMaterial(0, BoardTileMaterial);
@@ -63,21 +89,29 @@ void UTilePlanesComponent::SpawnPlaneAtLocation(FVector PlaneSpawnLocation)
 
 FVector UTilePlanesComponent::GetTileLocationByArrayIndex(int32 index)
 {
-	if (BoardTiles.IsValidIndex(index))
+	if (!BoardTiles.IsValidIndex(index))
 	{
-		return BoardTiles[index]->GetComponentLocation();
+		if (BoardTiles.IsValidIndex(0))
+		{
+			return BoardTiles[0]->GetComponentLocation();
+		}
+		return FVector::ZeroVector;
 	}
-	return BoardTiles[0]->GetComponentLocation();
+	return BoardTiles[index]->GetComponentLocation();
 }
 
 void UTilePlanesComponent::ChangeTileImage(int32 IndexTile, FTileStatus NewStatus)
 {
+	if (!BoardTiles.IsValidIndex(IndexTile) || !NewStatus.TileInfo)
+	{
+		return;
+	}
 	BoardTiles[IndexTile]->SetMaterial(0, NewStatus.TileInfo->Material);
 }
 
 void UTilePlanesComponent::SpawnPlaneAndSwitch(int32 IndexCurrent, int32 IndexDestination, FTileStatus DestinationStatus, bool isSecondSwitch)
 {
-	if (BoardTiles.IsValidIndex(IndexCurrent) == false && BoardTiles.IsValidIndex(IndexDestination) == false)
+	if (BoardTiles.IsValidIndex(IndexCurrent) == false || BoardTiles.IsValidIndex(IndexDestination) == false)
 	{
 		return;
 	}
@@ -121,7 +155,7 @@ void UTilePlanesComponent::SpawnPlaneAndSwitch(int32 IndexCurrent, int32 IndexDe
 
 void UTilePlanesComponent::SpawnPlaneAndDrop(int32 IndexCurrent, int32 IndexDestination, FTileStatus CurrentPopulatedStatus)
 {
-	if (BoardTiles.IsValidIndex(IndexCurrent) == false && BoardTiles.IsValidIndex(IndexDestination) == false)
+	if (BoardTiles.IsValidIndex(IndexCurrent) == false || BoardTiles.IsValidIndex(IndexDestination) == false)
 	{
 		return;
 	}
@@ -151,19 +185,26 @@ void UTilePlanesComponent::SpawnPlaneAndDrop(int32 IndexCurrent, int32 IndexDest
 
 void UTilePlanesComponent::SpawnScoreMaterialPlane(int32 IndexOfMatch, FGameplayTag GameplayTag)
 {
+	if (!BoardTiles.IsValidIndex(IndexOfMatch)) return;
+	
 	FGameplayTag AffectedGameplayTag = FGameplayTag::RequestGameplayTag(FName("Affection"));
 	const FTransform Transform = BoardTiles[IndexOfMatch]->GetRelativeTransform();
-	
 	
 		if (UStaticMeshComponent* StaticMeshComponent = SpawnMovementPlane(Transform))
 		{
 			if (GameplayTag.MatchesTag(AffectedGameplayTag))
 			{
-				StaticMeshComponent->SetMaterial(0, ScoreAffectionTileMaterial);
+				if (ScoreAffectionTileMaterial)
+				{
+					StaticMeshComponent->SetMaterial(0, ScoreAffectionTileMaterial);
+				}
 			}
 			else
 			{
-				StaticMeshComponent->SetMaterial(0, GoalNegativeTileMaterial);
+				if (GoalNegativeTileMaterial)
+				{
+					StaticMeshComponent->SetMaterial(0, GoalNegativeTileMaterial);
+				}
 			}
 			DestroyMovePlane(StaticMeshComponent, ScorePlaneDuration);
 		}
@@ -171,8 +212,11 @@ void UTilePlanesComponent::SpawnScoreMaterialPlane(int32 IndexOfMatch, FGameplay
 
 void UTilePlanesComponent::SwitchPlanes(int32 indexLeft, int32 indexRight)
 {
+	if (!BoardTiles.IsValidIndex(indexLeft) || !BoardTiles.IsValidIndex(indexRight)) return;
+	
 	const FTransform TransformRight = BoardTiles[indexRight]->GetRelativeTransform();
 	const FTransform TransformLeft = BoardTiles[indexLeft]->GetRelativeTransform();
+	
 	FLatentActionInfo LatentInfoRight;
 	LatentInfoRight.CallbackTarget = this;
 	LatentInfoRight.UUID = __LINE__;
@@ -194,12 +238,15 @@ void UTilePlanesComponent::SwitchPlanes(int32 indexLeft, int32 indexRight)
 
 void UTilePlanesComponent::ToggleVisibilityOfTilePlane(int32 Index, bool IsVisible)
 {
-	BoardTiles[Index]->SetVisibility(false);
+	if (!BoardTiles.IsValidIndex(Index)) return;
 	
+	BoardTiles[Index]->SetVisibility(IsVisible);
 }
 
 void UTilePlanesComponent::ChangeAppearanceOfPlaneToMimicEmpty(int32 Index)
 {
+	if (!BoardTiles.IsValidIndex(Index)) return;
+	
 	if (BoardTileMaterial)
 	{
 		BoardTiles[Index]->SetMaterial(0, BoardTileMaterial);
@@ -208,13 +255,23 @@ void UTilePlanesComponent::ChangeAppearanceOfPlaneToMimicEmpty(int32 Index)
 
 void UTilePlanesComponent::StopAllTimers()
 {
-	for (int32 i = 0; i < ActiveTimers.Num(); i++)
+	DestroyStaticMeshesPendingDestruction();
+	if (UWorld* World = GetWorld())
 	{
-		if (ActiveTimers[i].IsValid())
+		World->GetTimerManager().ClearAllTimersForObject(this);
+		for (FTimerHandle& Handle : ActiveTimers)
 		{
-			GetWorld()->GetTimerManager().ClearTimer(ActiveTimers[i]);
+			if (Handle.IsValid())
+			{
+				World->GetTimerManager().ClearTimer(Handle);
+			}
 		}
-		
+	}
+	ActiveTimers.Empty();
+
+	if (AGameStatePM* GameStatePM = Cast<AGameStatePM>(GetWorld()->GetGameState()))
+	{
+		GameStatePM->OnTimersClearedLoadNextLevelSignature.Broadcast();
 	}
 }
 
@@ -233,7 +290,7 @@ void UTilePlanesComponent::DestroyStaticMeshesPendingDestruction()
 		{
 			StaticMeshComponent->DestroyComponent();
 		}
-		
+		StaticMeshComponentsPendingDestuction.RemoveAt(i);
 	}
 }
 
@@ -241,75 +298,88 @@ void UTilePlanesComponent::DestroyMovePlane(UStaticMeshComponent* StaticMeshComp
 {
 	if (!StaticMeshComponent) return;
 	
+	
+	TWeakObjectPtr<UTilePlanesComponent> WeakThis(this);
+	TWeakObjectPtr<UStaticMeshComponent> WeakMesh (StaticMeshComponent);
+	
+	UWorld* World = GetWorld();
+	if (!World) return;
+
 	FTimerHandle TimerHandle;
-	StaticMeshComponentsPendingDestuction.Add(StaticMeshComponent);
-	
-	GetWorld()->GetTimerManager().SetTimer(
-		TimerHandle,
-		[this, StaticMeshComponent, TimerHandle]()
+
+	FTimerDelegate TimerDelegate = FTimerDelegate::CreateLambda([WeakThis, WeakMesh]()
+	{
+		if (!WeakThis.IsValid()) return;
+		UTilePlanesComponent* TilePlanesComponentSelf = WeakThis.Get();
+		if (!TilePlanesComponentSelf) return;
+
+		if (UStaticMeshComponent* StaticMesh = WeakMesh.Get())
 		{
-			if (StaticMeshComponent)
-			{
-				if (StaticMeshComponent != nullptr)
-				{
-					StaticMeshComponentsPendingDestuction.Remove(StaticMeshComponent);
-					StaticMeshComponent->DestroyComponent();
-					ActiveTimers.Remove(TimerHandle);
-				}
-				
-			}
-		},
-		DestroyAfterDuration,  // Delay per component
-		false  // Do not loop
-	);
-	
+			TilePlanesComponentSelf->StaticMeshComponentsPendingDestuction.Remove(StaticMesh);
+			StaticMesh->DestroyComponent();
+		}
+		
+	});
+
+	World->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, DestroyAfterDuration, false);
 	ActiveTimers.Add(TimerHandle);
 }
 
 void UTilePlanesComponent::OnSwitchCompleteProcessSwitch(int32 IndexCurrent, FTileStatus DestinationStatus, float ProcessAfterDuration, bool isSecondSwitch)
 {
+	
+	TWeakObjectPtr<UTilePlanesComponent> WeakThis(this);
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
 	FTimerHandle TimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(
-		TimerHandle,
-		[this, IndexCurrent, DestinationStatus, TimerHandle, isSecondSwitch]()
+	FTimerDelegate TimerDelegate = FTimerDelegate::CreateLambda([WeakThis, IndexCurrent, DestinationStatus, isSecondSwitch]()
 		{
-			if (AActor* ActorOwner = GetOwner())
+		UE_LOG(LogTemp, Warning, TEXT("OnDropCompleteProcessDrop fired. WeakThis validity is : %d"), WeakThis.IsValid());
+			if (!WeakThis.IsValid()) return;
+
+			UTilePlanesComponent* TilePlanesComponentSelf = WeakThis.Get();
+			if (!TilePlanesComponentSelf) return;
+			
+			if (AActor* ActorOwner = TilePlanesComponentSelf->GetOwner())
 			{
 				if (AGameBoard* GameBoard = Cast<AGameBoard>(ActorOwner))
 				{
 					GameBoard->ProcessSwitch(IndexCurrent, DestinationStatus, isSecondSwitch);
-					if (TimerHandle.IsValid())
-					{
-						ActiveTimers.Remove(TimerHandle);
-					}
-					
 				}
 			}
-		},
-			ProcessAfterDuration, false
-	);
+	});
+	World->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, ProcessAfterDuration, false);
 	ActiveTimers.Add(TimerHandle);
 }
 
 void UTilePlanesComponent::OnDropCompleteProcessDrop(int32 IndexDestination, FTileStatus CurrentStatus,
 	float ProcessAfterDuration)
 {
+	
+	TWeakObjectPtr<UTilePlanesComponent> WeakThis(this);
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	
 	FTimerHandle TimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(
-		TimerHandle,
-		[this, IndexDestination, CurrentStatus, TimerHandle]()
+	FTimerDelegate TimerDelegate = FTimerDelegate::CreateLambda([WeakThis, IndexDestination, CurrentStatus]()
+	{
+		if (!WeakThis.IsValid()) return;
+
+		UTilePlanesComponent* TilePlanesComponentSelf = WeakThis.Get();
+		if (!TilePlanesComponentSelf) return;
+		
+		if (AActor* ActorOwner = TilePlanesComponentSelf->GetOwner())
 		{
-			if (AActor* ActorOwner = GetOwner())
+			if (AGameBoard* GameBoard = Cast<AGameBoard>(ActorOwner))
 			{
-				if (AGameBoard* GameBoard = Cast<AGameBoard>(ActorOwner))
-				{
-					GameBoard->ProcessDrop(IndexDestination, CurrentStatus);
-					ActiveTimers.Remove(TimerHandle);
-				}
+				GameBoard->ProcessDrop(IndexDestination, CurrentStatus);
 			}
-		},
-			ProcessAfterDuration, false
-	);
+		}
+	});
+	World->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, ProcessAfterDuration, false);
 	ActiveTimers.Add(TimerHandle);
 }
 
@@ -332,7 +402,11 @@ UStaticMeshComponent* UTilePlanesComponent::SpawnMovementPlane(FTransform Transf
 				{
 					StaticMeshComponent->SetStaticMesh(PlaneMesh);
 				}
-				StaticMeshComponent->RegisterComponent();
+				if (StaticMeshComponent->IsRegistered() == false)
+				{
+					StaticMeshComponent->RegisterComponent();
+				}
+				
 				StaticMeshComponent->SetupAttachment( ActorOwner->GetRootComponent());
 				return StaticMeshComponent;
 			}
@@ -345,14 +419,21 @@ UStaticMeshComponent* UTilePlanesComponent::SpawnMovementPlane(FTransform Transf
 
 void UTilePlanesComponent::AssignTileImageToMovePlane(int32 Index, UStaticMeshComponent* StaticMeshComponent)
 {
+	if (!StaticMeshComponent) return;
+	
 	if (AActor* ActorOwner = Cast<AActor>(GetOwner()))
 	{
 		if (UTileInfoManagerComponent* TileInfoManagerComponent = ActorOwner->GetComponentByClass<UTileInfoManagerComponent>())
 		{
-			if (UMaterialInterface* MaterialInterface = TileInfoManagerComponent->TileStatuses[Index].TileInfo->Material)
+			if (TileInfoManagerComponent->TileStatuses.IsValidIndex(Index))
 			{
-				StaticMeshComponent->SetMaterial(0, MaterialInterface);
+				
+				if (UMaterialInterface* MaterialInterface = TileInfoManagerComponent->TileStatuses[Index].TileInfo->Material)
+				{
+					StaticMeshComponent->SetMaterial(0, MaterialInterface);
+				}
 			}
+			
 		}
 	}
 }

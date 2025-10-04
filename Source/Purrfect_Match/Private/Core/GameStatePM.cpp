@@ -42,7 +42,7 @@ void AGameStatePM::HandleMatchHasEnded()
 		GameStateMatchEndDelegate.Broadcast();
 		FName MatchStateStatus3 = GameMode->GetMatchState();
 	}
-	// Super::HandleMatchHasEnded();
+	 Super::HandleMatchHasEnded();
 	// GameStateMatchEndDelegate.Broadcast();
 	
 }

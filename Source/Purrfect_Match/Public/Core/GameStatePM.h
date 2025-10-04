@@ -42,6 +42,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGameStateLevelCompletedSignature);
 //GameMode
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGameModeLoadLevelBoardSignature, ELevelStage, LevelStage);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnContinueClickedClearTimersSignature);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTimersClearedLoadNextLevelSignature);
+
 
 
 
@@ -97,6 +101,12 @@ public:
 	//GameMode
 	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "GameState Delegate")
 	FGameModeLoadLevelBoardSignature GameModeLoadLevelBoardDelegate;
+
+	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "GameState Delegate")
+	FOnContinueClickedClearTimersSignature OnContinueClickedClearTimerDelegate;
+
+	UPROPERTY(BlueprintCallable, Blueprintable, BlueprintAssignable, Category = "GameState Delegate")
+	FOnTimersClearedLoadNextLevelSignature OnTimersClearedLoadNextLevelSignature;
 
 	
 
