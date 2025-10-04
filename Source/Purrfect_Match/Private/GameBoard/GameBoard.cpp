@@ -328,13 +328,14 @@ void AGameBoard::ProcessMatches()
 {
 	TileComponent->TileLineMatchProcessorComponent->CheckforLinesHorizontal();
 	TileComponent->TileLineMatchProcessorComponent->CheckforLinesVertical();
+	TileComponent->TileInfoManagerComponent->CheckTilesBelowAndMove();
 	// CheckforLinesHorizontal();
 	// CheckforLinesVertical();
 
 	if (TileComponent->TileLineMatchProcessorComponent->indexOfMatchedTiles.IsEmpty() == false)
 	{
 		TileComponent->TileLineMatchProcessorComponent->ProcessMatches();
-		TileComponent->TileInfoManagerComponent->CheckTilesBelowAndMove();
+		//TileComponent->TileInfoManagerComponent->CheckTilesBelowAndMove();
 		ProcessMatches();
 	}
 }
