@@ -84,11 +84,14 @@ public:
 	UFUNCTION()
 	UStaticMeshComponent* SpawnMovementPlane(FTransform TransformForSpawn);
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time of Plane Destruction")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time of movement")
 	float movePlaneDuration = 0.5f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time of Plane Destruction")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time of movement")
 	float ScorePlaneDuration = 0.4f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Time of movement")
+	float SwitchDuration = 0.4f;
 
 	UPROPERTY()
 	TArray<FTimerHandle> ActiveTimers;
@@ -118,6 +121,8 @@ public:
 
 	UFUNCTION()
 	void EmptyPool();
+
+	
 
 protected:
 	// Called when the game starts

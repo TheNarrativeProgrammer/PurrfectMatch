@@ -136,18 +136,18 @@ void UTilePlanesComponent::SpawnPlaneAndSwitch(int32 IndexCurrent, int32 IndexDe
 	LatentInfoDestination.ExecutionFunction = NAME_None;
 
 	UKismetSystemLibrary::MoveComponentTo(MoveStaticMeshComponent,TransformDesination.GetLocation(), TransformDesination.Rotator(),
-		false, false, movePlaneDuration, false, EMoveComponentAction::Move, LatentInfoDestination);
+		false, false, SwitchDuration, false, EMoveComponentAction::Move, LatentInfoDestination);
 
-	DestroyMovePlane(MoveStaticMeshComponent, movePlaneDuration + 0.05f);
+	DestroyMovePlane(MoveStaticMeshComponent, SwitchDuration + 0.05f);
 
 	if (isSecondSwitch == true)
 	{
-		OnSwitchCompleteProcessSwitch(IndexCurrent, DestinationStatus, movePlaneDuration + 0.07f, isSecondSwitch);
+		OnSwitchCompleteProcessSwitch(IndexCurrent, DestinationStatus, SwitchDuration + 0.07f, isSecondSwitch);
 	}
 	else
 	{
 
-		OnSwitchCompleteProcessSwitch(IndexCurrent, DestinationStatus, movePlaneDuration + 0.05f, isSecondSwitch);
+		OnSwitchCompleteProcessSwitch(IndexCurrent, DestinationStatus, SwitchDuration + 0.05f, isSecondSwitch);
 		
 	}
 	
