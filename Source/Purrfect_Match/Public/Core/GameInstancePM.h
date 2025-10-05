@@ -28,6 +28,7 @@ enum ELevelStage : uint8
 	GAMEOVER_MENU,
 };
 
+class UMusicManagerComponent;
 UCLASS()
 class PURRFECT_MATCH_API UGameInstancePM : public UGameInstance
 {
@@ -43,7 +44,7 @@ protected:
 	TEnumAsByte<ELevelStage> CurrentLevelStage;
 
 public:
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Level Stages")
 	void SetLevelStage(TEnumAsByte<ELevelStage> LevelStage);
 

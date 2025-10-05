@@ -15,9 +15,9 @@ AHUDPurrfectMatch::AHUDPurrfectMatch()
 void AHUDPurrfectMatch::BeginPlay()
 {
 	Super::BeginPlay();
-	if (APlayerController* PlayerController = GetOwningPlayerController())
-	{
-		UInputDelegateBinding::BindInputDelegates(GetClass(), PlayerController->InputComponent, this);
-		
-	}
+	// if (APlayerController* PlayerController = GetOwningPlayerController())
+	// {
+	// 	UInputDelegateBinding::BindInputDelegates(GetClass(), PlayerController->InputComponent, this);
+	// 	
+	// }
 }
